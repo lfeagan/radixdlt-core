@@ -21,7 +21,6 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.concurrent.TimeUnit;
 
-import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
@@ -72,52 +71,52 @@ public class UInt128Benchmark {
     	return UInt128.from(bi.toByteArray());
     }
 
-	@Benchmark
+//	@Benchmark
 	public void AddLargeLargeInt128(Blackhole bh) {
 		bh.consume(UI_LARGE_VALUE1.add(UI_LARGE_VALUE2));
 	}
 
-	@Benchmark
+//	@Benchmark
 	public void AddLargeLargeBigInt(Blackhole bh) {
 		bh.consume(BI_LARGE_VALUE1.add(BI_LARGE_VALUE2));
 	}
 
-	@Benchmark
+//	@Benchmark
 	public void SubLargeLargeInt128(Blackhole bh) {
 		bh.consume(UI_LARGE_VALUE1.subtract(UI_LARGE_VALUE2));
 	}
 
-	@Benchmark
+//	@Benchmark
 	public void SubLargeLargeBigInt(Blackhole bh) {
 		bh.consume(BI_LARGE_VALUE1.subtract(BI_LARGE_VALUE2));
 	}
 
-	@Benchmark
+//	@Benchmark
 	public void MulLargeSmallInt128(Blackhole bh) {
 		bh.consume(UI_LARGE_VALUE1.multiply(UI_SMALL_VALUE));
 	}
 
-	@Benchmark
+//	@Benchmark
 	public void MulLargeSmallBigInt(Blackhole bh) {
 		bh.consume(BI_LARGE_VALUE1.multiply(BI_SMALL_VALUE));
 	}
 
-	@Benchmark
+//	@Benchmark
 	public void DivLargeSmallInt128(Blackhole bh) {
 		bh.consume(UI_LARGE_VALUE1.divide(UI_SMALL_VALUE));
 	}
 
-	@Benchmark
+//	@Benchmark
 	public void DivLargeSmallBigInt(Blackhole bh) {
 		bh.consume(BI_LARGE_VALUE1.divide(BI_SMALL_VALUE));
 	}
 
-	@Benchmark
+//	@Benchmark
 	public void SqrtLargeInt128(Blackhole bh) {
 		bh.consume(UI_LARGE_VALUE1.isqrt());
 	}
 
-	@Benchmark
+//	@Benchmark
 	public void SqrtLargeBigInt(Blackhole bh) {
 		bh.consume(BigIntegerMath.sqrt(BI_LARGE_VALUE1, RoundingMode.FLOOR));
 	}

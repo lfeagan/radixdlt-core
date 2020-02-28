@@ -62,6 +62,12 @@ dependencies {
 
     implementation 'io.reactivex.rxjava3:rxjava:3.0.0'
     implementation 'com.sleepycat:je:18.3.12'
+    
+    compile('org.bitcoinj:bitcoinj-core:0.15.6') {
+        exclude group: 'com.google.guava', module: 'guava'
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15to18'
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
 
     compile 'commons-cli:commons-cli:1.4'
     compile 'org.json:json:20180813'

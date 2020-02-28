@@ -18,13 +18,25 @@
 package org.radix.benchmark;
 
 
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+import org.bitcoin.NativeSecp256k1;
+import org.bitcoin.NativeSecp256k1Util.AssertFailException;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 import org.radix.logging.Logging;
-import com.radixdlt.serialization.DsonOutput.Output;
-import com.radixdlt.serialization.Serialization;
-import com.radixdlt.serialization.SerializationException;
 
-import org.radix.serialization.DummyTestObject;
+import com.radixdlt.crypto.CryptoException;
+import com.radixdlt.crypto.ECKeyPair;
+import com.radixdlt.crypto.ECPublicKey;
+import com.radixdlt.crypto.ECSignature;
+import com.radixdlt.crypto.Hash;
 import org.radix.serialization.TestSetupUtils;
 
 /**
@@ -49,14 +61,22 @@ import org.radix.serialization.TestSetupUtils;
  * can be added to the {@code ~/.gradle/gradle.properties} to completely
  * disable gradle daemons.
  */
-public class CodecBenchmark {
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.MICROSECONDS)
+@Warmup(iterations = 1, time = 10, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
+public class SigVerfBenchmark {
 
-	private static final DummyTestObject testObject;
+	private static final byte[] hash;
 
-	private static Serialization serialization;
+	private static final ECKeyPair bckp;
+	private static final ECPublicKey bckpub;
+	private static final ECSignature bcsignature;
 
-	private static String jacksonJson;
-	private static byte[] jacksonBytes;
+	private static final byte[] bjpriv;
+	private static final byte[] bjpub;
+	private static final byte[] bjsig;
+
 
 	static {
 		// Disable this output for now, as the serialiser is quite verbose when starting.
@@ -64,58 +84,34 @@ public class CodecBenchmark {
 		try {
 			TestSetupUtils.installBouncyCastleProvider();
 
-			serialization = Serialization.getDefault();
+			Random r = new Random();
+			hash = new byte[Hash.BYTES];
+			r.nextBytes(hash);
 
-			testObject = new DummyTestObject(true);
+			bckp = new ECKeyPair();
+			bckpub = bckp.getPublicKey();
+			bcsignature = bckp.sign(hash);
 
-			jacksonJson = serialization.toJson(testObject, Output.ALL);
-			jacksonBytes = serialization.toDson(testObject, Output.ALL);
-
-			System.out.format("DSON bytes length: %s%n", jacksonBytes.length);
-			System.out.format("JSON bytes length: %s%n", jacksonJson.length());
-		} catch (SerializationException ex) {
+			bjpriv = bckp.getPrivateKey().clone();
+			bjpub = bckp.getPublicKey().getBytes().clone();
+			bjsig = NativeSecp256k1.sign(hash, bjpriv);
+		} catch (CryptoException | AssertFailException ex) {
 			throw new IllegalStateException("Can't initialise test objects", ex);
 		}
 	}
 
-//	@Benchmark
-	public void jacksonToBytesTest(Blackhole bh) {
-		try {
-			byte[] bytes = serialization.toDson(testObject, Output.WIRE);
-			bh.consume(bytes);
-		} catch (SerializationException ex) {
-			throw new RuntimeException(ex);
-		}
+	@Benchmark
+	public void signatureVerificationBC(Blackhole bh) {
+		boolean isOk = bckpub.verify(hash, bcsignature);
+		bh.consume(isOk);
 	}
 
-//	@Benchmark
-	public void jacksonFromBytesTest(Blackhole bh) {
-		try {
-			DummyTestObject newObj = serialization.fromDson(jacksonBytes, DummyTestObject.class);
-			bh.consume(newObj);
-		} catch (SerializationException ex) {
-			throw new RuntimeException(ex);
+	@Benchmark
+	public void signatureVerificationBJ(Blackhole bh) throws AssertFailException {
+		boolean isOk = NativeSecp256k1.verify(hash, bjsig, bjpub);
+		if (!isOk) {
+			throw new IllegalStateException();
 		}
-	}
-
-
-//	@Benchmark
-	public void jacksonToJsonTest(Blackhole bh) {
-		try {
-			String json = serialization.toJson(testObject, Output.WIRE);
-			bh.consume(json);
-		} catch (SerializationException ex) {
-			throw new RuntimeException(ex);
-		}
-	}
-
-//	@Benchmark
-	public void jacksonFromJsonTest(Blackhole bh) {
-		try {
-			DummyTestObject newObj = serialization.fromJson(jacksonJson, DummyTestObject.class);
-			bh.consume(newObj);
-		} catch (SerializationException ex) {
-			throw new RuntimeException(ex);
-		}
+		bh.consume(isOk);
 	}
 }
