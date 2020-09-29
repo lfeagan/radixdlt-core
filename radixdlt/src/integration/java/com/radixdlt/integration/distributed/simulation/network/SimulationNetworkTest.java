@@ -21,8 +21,8 @@ import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.ImmutableSet;
 import com.radixdlt.consensus.ConsensusEvent;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Proposal;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.consensus.sync.GetVerticesRequest;
@@ -47,8 +47,8 @@ public class SimulationNetworkTest {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node1).bftEvents()
 			.subscribe(testObserver);
-		NewView newView = mock(NewView.class);
-		network.getNetwork(node1).sendNewView(newView, node1);
+		ViewTimeoutSigned newView = mock(ViewTimeoutSigned.class);
+		network.getNetwork(node1).sendViewTimeout(newView, node1);
 		testObserver.awaitCount(1);
 		testObserver.assertValue(newView);
 	}
@@ -59,9 +59,9 @@ public class SimulationNetworkTest {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node1).bftEvents()
 			.subscribe(testObserver);
-		NewView newView = mock(NewView.class);
-		network.getNetwork(node1).sendNewView(newView, node1);
-		network.getNetwork(node1).sendNewView(newView, node1);
+		ViewTimeoutSigned newView = mock(ViewTimeoutSigned.class);
+		network.getNetwork(node1).sendViewTimeout(newView, node1);
+		network.getNetwork(node1).sendViewTimeout(newView, node1);
 		testObserver.awaitCount(2);
 		testObserver.assertValues(newView, newView);
 	}
@@ -72,9 +72,9 @@ public class SimulationNetworkTest {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node1).bftEvents()
 			.subscribe(testObserver);
-		NewView newView = mock(NewView.class);
-		network.getNetwork(node1).sendNewView(newView, node1);
-		network.getNetwork(node2).sendNewView(newView, node1);
+		ViewTimeoutSigned newView = mock(ViewTimeoutSigned.class);
+		network.getNetwork(node1).sendViewTimeout(newView, node1);
+		network.getNetwork(node2).sendViewTimeout(newView, node1);
 		testObserver.awaitCount(2);
 		testObserver.assertValues(newView, newView);
 	}
@@ -112,8 +112,8 @@ public class SimulationNetworkTest {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node2).bftEvents()
 			.subscribe(testObserver);
-		NewView newView = mock(NewView.class);
-		network.getNetwork(node1).sendNewView(newView, node1);
+		ViewTimeoutSigned newView = mock(ViewTimeoutSigned.class);
+		network.getNetwork(node1).sendViewTimeout(newView, node1);
 		testObserver.awaitCount(1);
 		testObserver.assertEmpty();
 	}

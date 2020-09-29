@@ -19,8 +19,8 @@ package com.radixdlt.consensus.liveness;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.RateLimiter;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.bft.BFTValidatorSet;
 import org.apache.logging.log4j.Level;
@@ -68,7 +68,7 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 	private final ProceedToViewSender proceedToViewSender;
 	private final PacemakerTimeoutSender timeoutSender;
 	private final PacemakerInfoSender pacemakerInfoSender;
-	private final PendingNewViews pendingNewViews;
+	private final PendingViewTimeouts pendingNewViews;
 
 	private final RateLimiter newViewLogLimiter = RateLimiter.create(1.0);
 
@@ -107,10 +107,9 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 		this.proceedToViewSender = Objects.requireNonNull(proceedToViewSender);
 		this.timeoutSender = Objects.requireNonNull(timeoutSender);
 		this.pacemakerInfoSender = Objects.requireNonNull(pacemakerInfoSender);
-		this.pendingNewViews = new PendingNewViews();
+		this.pendingNewViews = new PendingViewTimeouts();
 		log.debug("{} with max timeout {}*{}^{}ms",
 			getClass().getSimpleName(), this.timeoutMilliseconds, this.rate, this.maxExponent);
-
 	}
 
 	@Override
@@ -140,8 +139,8 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 	}
 
 	@Override
-	public Optional<View> processNewView(NewView newView, BFTValidatorSet validatorSet) {
-		View newViewView = newView.getView();
+	public Optional<View> processViewTimeout(ViewTimeoutSigned newView, BFTValidatorSet validatorSet) {
+		View newViewView = newView.view();
 		if (newViewView.compareTo(this.lastSyncView) <= 0) {
 			// Log happens a lot where f > 0, so setting to trace level
 			log.trace("Ignoring NewView message {}: last sync view is {}", newView, this.lastSyncView);
@@ -153,7 +152,7 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 		final View qcView = newView.getQC().getView();
 		final boolean highestQC = !qcView.isGenesis() && qcView.next().equals(this.currentView);
 
-		if (!this.pendingNewViews.insertNewView(newView, validatorSet).isPresent() && !highestQC) {
+		if (!this.pendingNewViews.insertViewTimeout(newView, validatorSet).isPresent() && !highestQC) {
 			log.debug("NewView quorum not yet formed (qc {}+1 -> {})", qcView, this.currentView);
 			return Optional.empty();
 		}

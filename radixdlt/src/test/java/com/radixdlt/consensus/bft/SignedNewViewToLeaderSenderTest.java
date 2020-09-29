@@ -24,8 +24,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.bft.SignedNewViewToLeaderSender.BFTNewViewSender;
 import com.radixdlt.consensus.liveness.ProposerElection;
 import org.junit.Before;
@@ -49,13 +49,13 @@ public class SignedNewViewToLeaderSenderTest {
 	@Test
 	public void testSend() {
 		View view = mock(View.class);
-		NewView newView = mock(NewView.class);
+		ViewTimeoutSigned newView = mock(ViewTimeoutSigned.class);
 		when(newViewSigner.signNewView(eq(view), any(), any())).thenReturn(newView);
 		BFTNode node = mock(BFTNode.class);
 		when(proposerElection.getProposer(eq(view))).thenReturn(node);
 
 		this.sender.sendProceedToNextView(view, mock(QuorumCertificate.class), mock(QuorumCertificate.class));
 
-		verify(newViewSender, times(1)).sendNewView(eq(newView), eq(node));
+		verify(newViewSender, times(1)).sendViewTimeout(eq(newView), eq(node));
 	}
 }

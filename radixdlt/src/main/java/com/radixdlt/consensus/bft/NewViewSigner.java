@@ -20,11 +20,11 @@ package com.radixdlt.consensus.bft;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.radixdlt.consensus.HashSigner;
-import com.radixdlt.consensus.NewView;
+import com.radixdlt.consensus.Hasher;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.ViewTimeout;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.crypto.ECDSASignature;
-import com.radixdlt.crypto.Hash;
-import com.radixdlt.utils.Longs;
 import java.util.Objects;
 
 /**
@@ -32,11 +32,13 @@ import java.util.Objects;
  */
 public final class NewViewSigner {
 	private final HashSigner signer;
+	private final Hasher hasher;
 	private final BFTNode self;
 
 	@Inject
-	public NewViewSigner(@Named("self") BFTNode self, HashSigner signer) {
+	public NewViewSigner(@Named("self") BFTNode self, Hasher hasher, HashSigner signer) {
 		this.self = Objects.requireNonNull(self);
+		this.hasher = Objects.requireNonNull(hasher);
 		this.signer = Objects.requireNonNull(signer);
 	}
 
@@ -47,15 +49,9 @@ public final class NewViewSigner {
 	 * @param highestCommittedQC highest known committed qc
 	 * @return a signed new-view
 	 */
-	public NewView signNewView(View nextView, QuorumCertificate highestQC, QuorumCertificate highestCommittedQC) {
-		// TODO make signing more robust by including author in signed hash
-		ECDSASignature signature = this.signer.sign(Hash.hash256(Longs.toByteArray(nextView.number())));
-		return new NewView(
-			this.self,
-			nextView,
-			highestQC,
-			highestCommittedQC,
-			signature
-		);
+	public ViewTimeoutSigned signNewView(View nextView, QuorumCertificate highestQC, QuorumCertificate highestCommittedQC) {
+		ViewTimeout timeout = new ViewTimeout(this.self, nextView, highestQC, highestCommittedQC);
+		ECDSASignature signature = this.signer.sign(this.hasher.hash(timeout));
+		return new ViewTimeoutSigned(timeout, signature);
 	}
 }

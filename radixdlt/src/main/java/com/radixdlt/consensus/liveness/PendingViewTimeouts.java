@@ -17,6 +17,7 @@
 
 package com.radixdlt.consensus.liveness;
 
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.bft.BFTNode;
 import java.util.Map;
 import java.util.Optional;
@@ -28,53 +29,47 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.radixdlt.SecurityCritical;
-import com.radixdlt.SecurityCritical.SecurityKind;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.bft.ValidationState;
 import com.radixdlt.consensus.bft.BFTValidatorSet;
 import com.radixdlt.crypto.ECDSASignature;
 
 /**
- * Manages pending {@link NewView} items.
+ * Manages pending {@link ViewTimeoutSigned} items.
  * <p>
  * This class is NOT thread-safe.
- * <p>
- * This class is security critical (signature checks, validator set membership checks).
  */
 @NotThreadSafe
-@SecurityCritical({ SecurityKind.SIG_VERIFY, SecurityKind.GENERAL })
-public final class PendingNewViews {
+public final class PendingViewTimeouts {
 	private static final Logger log = LogManager.getLogger();
 
-	private final Map<View, ValidationState> newViewState = Maps.newHashMap();
-	private final Map<BFTNode, View> previousNewView = Maps.newHashMap();
+	private final Map<View, ValidationState> timeoutState = Maps.newHashMap();
+	private final Map<BFTNode, View> previousTimeout = Maps.newHashMap();
 
 	/**
-	 * Inserts a {@link NewView}, attempting to form a quorum certificate.
+	 * Inserts a {@link ViewTimeoutSigned}, attempting to form a quorum of timeouts.
 	 * <p>
-	 * A QC will only be formed if permitted by the {@link BFTValidatorSet}.
+	 * A quorum will only be formed if permitted by the {@link BFTValidatorSet}.
 	 *
-	 * @param newView The {@link NewView} to be inserted
+	 * @param viewTimeout The {@link ViewTimeoutSigned} to be inserted
 	 * @param validatorSet The validator set to form a quorum with
-	 * @return The generated QC, if any
+	 * @return The timed-out view, if a quorum was formed
 	 */
-	public Optional<View> insertNewView(NewView newView, BFTValidatorSet validatorSet) {
-		final BFTNode node = newView.getAuthor();
+	public Optional<View> insertViewTimeout(ViewTimeoutSigned viewTimeout, BFTValidatorSet validatorSet) {
+		final BFTNode node = viewTimeout.getAuthor();
 		if (!validatorSet.containsNode(node)) {
 			// Not a valid validator
-			log.info("Ignoring new view from invalid author {}", node::getSimpleName);
+			log.info("Ignoring view timeout from invalid author {}", node);
 			return Optional.empty();
 		}
 
-		final ECDSASignature signature = newView.getSignature().orElseThrow(() -> new IllegalArgumentException("new-view is missing signature"));
-		final View thisView = newView.getView();
-		if (!replacePreviousNewView(node, thisView)) {
+		final ECDSASignature signature = viewTimeout.signature();
+		final View thisView = viewTimeout.view();
+		if (!replacePreviousTimeout(node, thisView)) {
 			return Optional.empty();
 		}
 
-		ValidationState validationState = this.newViewState.computeIfAbsent(thisView, k -> validatorSet.newValidationState());
+		ValidationState validationState = this.timeoutState.computeIfAbsent(thisView, k -> validatorSet.newValidationState());
 
 		// check if we have gotten enough new-views to proceed
 		// NewView timestamps here are not required, so we use 0L below
@@ -86,8 +81,8 @@ public final class PendingNewViews {
 		return Optional.of(thisView);
 	}
 
-	private boolean replacePreviousNewView(BFTNode author, View thisView) {
-		View previousView = this.previousNewView.put(author, thisView);
+	private boolean replacePreviousTimeout(BFTNode author, View thisView) {
+		View previousView = this.previousTimeout.put(author, thisView);
 		if (previousView == null) {
 			// No previous NewView for this author, all good here
 			return true;
@@ -101,11 +96,11 @@ public final class PendingNewViews {
 
 		// Prune last pending NewView from pending.
 		// This limits the number of pending new views that are in the pipeline.
-		ValidationState validationState = this.newViewState.get(previousView);
+		ValidationState validationState = this.timeoutState.get(previousView);
 		if (validationState != null) {
 			validationState.removeSignature(author);
 			if (validationState.isEmpty()) {
-				this.newViewState.remove(previousView);
+				this.timeoutState.remove(previousView);
 			}
 		}
 		return true;
@@ -113,13 +108,13 @@ public final class PendingNewViews {
 
 	@VisibleForTesting
 	// Greybox stuff for testing
-	int newViewStateSize() {
-		return this.newViewState.size();
+	int timeoutStateSize() {
+		return this.timeoutState.size();
 	}
 
 	@VisibleForTesting
 	// Greybox stuff for testing
-	int previousNewViewsSize() {
-		return this.previousNewView.size();
+	int previousTimeoutSize() {
+		return this.previousTimeout.size();
 	}
 }

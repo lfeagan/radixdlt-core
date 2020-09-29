@@ -17,8 +17,8 @@
 
 package com.radixdlt.consensus.bft;
 
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.liveness.ExponentialTimeoutPacemaker.ProceedToViewSender;
 import com.radixdlt.consensus.liveness.ProposerElection;
 import java.util.Objects;
@@ -37,7 +37,7 @@ public final class SignedNewViewToLeaderSender implements ProceedToViewSender {
 		 * @param newView the new-view message
 		 * @param nextLeader the validator the message gets sent to
 		 */
-		void sendNewView(NewView newView, BFTNode nextLeader);
+		void sendViewTimeout(ViewTimeoutSigned newView, BFTNode nextLeader);
 	}
 
 	private final NewViewSigner newViewSigner;
@@ -56,9 +56,9 @@ public final class SignedNewViewToLeaderSender implements ProceedToViewSender {
 
 	@Override
 	public void sendProceedToNextView(View nextView, QuorumCertificate qc, QuorumCertificate highestCommitedQC) {
-		NewView newView = newViewSigner.signNewView(nextView, qc, highestCommitedQC);
+		ViewTimeoutSigned newView = newViewSigner.signNewView(nextView, qc, highestCommitedQC);
 		BFTNode nextLeader = this.proposerElection.getProposer(nextView);
-		log.trace("Sending NEW_VIEW to {}: {}", () -> nextLeader, () ->  newView);
-		this.sender.sendNewView(newView, nextLeader);
+		log.trace("Sending NEW_VIEW to {}: {}", nextLeader, newView);
+		this.sender.sendViewTimeout(newView, nextLeader);
 	}
 }

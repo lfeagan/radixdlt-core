@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.radixdlt.consensus.ConsensusEvent;
 import com.radixdlt.consensus.BFTEventsRx;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.bft.BFTEventReducer.BFTEventSender;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.SyncEpochsRPCRx;
@@ -33,7 +34,6 @@ import com.radixdlt.consensus.epoch.EpochManager.SyncEpochsRPCSender;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.consensus.sync.GetVerticesErrorResponse;
 import com.radixdlt.consensus.sync.GetVerticesResponse;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.SyncVerticesRPCRx;
 import com.radixdlt.consensus.Vote;
@@ -204,8 +204,8 @@ public class SimulationNetwork {
 		}
 
 		@Override
-		public void sendNewView(NewView newView, BFTNode newViewLeader) {
-			receivedMessages.onNext(MessageInTransit.newMessage(newView, thisNode, newViewLeader));
+		public void sendViewTimeout(ViewTimeoutSigned viewTimeout, BFTNode newViewLeader) {
+			receivedMessages.onNext(MessageInTransit.newMessage(viewTimeout, thisNode, newViewLeader));
 		}
 
 		@Override

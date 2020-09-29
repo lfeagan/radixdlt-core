@@ -18,12 +18,15 @@
 package com.radixdlt.consensus.safety;
 
 import com.radixdlt.consensus.bft.VerifiedVertex;
+import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.Hasher;
 import com.radixdlt.consensus.HashSigner;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.TimestampedVoteData;
 import com.radixdlt.consensus.UnverifiedVertex;
+import com.radixdlt.consensus.ViewTimeout;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.consensus.VoteData;
@@ -62,10 +65,10 @@ public final class SafetyRules {
 	 * @param highestCommittedQC highest known committed QC
 	 * @return signed proposal object for consensus
 	 */
-	public Proposal signProposal(UnverifiedVertex proposedVertex, QuorumCertificate highestCommittedQC, long payload) {
+	public Proposal signProposal(UnverifiedVertex proposedVertex, QuorumCertificate highestCommittedQC) {
 		final Hash vertexHash = this.hasher.hash(proposedVertex);
 		ECDSASignature signature = this.signer.sign(vertexHash);
-		return new Proposal(proposedVertex, highestCommittedQC, this.self, signature, payload);
+		return new Proposal(proposedVertex, highestCommittedQC, this.self, signature);
 	}
 
 	private static VoteData constructVoteData(VerifiedVertex proposedVertex, BFTHeader proposedHeader) {
@@ -87,6 +90,20 @@ public final class SafetyRules {
 	}
 
 	/**
+	 * Create a signed view timeout
+	 * @param nextView the view of the next view
+	 * @param highestQC highest known qc
+	 * @param highestCommittedQC highest known committed qc
+	 * @return a signed view timeout
+	 */
+	public ViewTimeoutSigned signViewTimeout(View nextView, QuorumCertificate highestQC, QuorumCertificate highestCommittedQC) {
+		ViewTimeout vt = new ViewTimeout(this.self, nextView, highestQC, highestCommittedQC);
+		Hash hash = this.hasher.hash(vt);
+		ECDSASignature signature = this.signer.sign(hash);
+		return new ViewTimeoutSigned(vt, signature);
+	}
+
+	/**
 	 * Vote for a proposed vertex while ensuring that safety invariants are upheld.
 	 *
 	 * @param proposedVertex The proposed vertex
@@ -95,7 +112,7 @@ public final class SafetyRules {
 	 * @return A vote result containing the vote and any committed vertices
 	 * @throws SafetyViolationException In case the vertex would violate a safety invariant
 	 */
-	public Vote voteFor(VerifiedVertex proposedVertex, BFTHeader proposedHeader, long timestamp, long payload) throws SafetyViolationException {
+	public Vote voteFor(VerifiedVertex proposedVertex, BFTHeader proposedHeader, long timestamp) throws SafetyViolationException {
 		// ensure vertex does not violate earlier votes
 		if (proposedVertex.getView().compareTo(this.state.getLastVotedView()) <= 0) {
 			throw new SafetyViolationException(proposedVertex, this.state, String.format(
@@ -123,6 +140,6 @@ public final class SafetyRules {
 
 		// TODO make signing more robust by including author in signed hash
 		ECDSASignature signature = this.signer.sign(voteHash);
-		return new Vote(this.self, timestampedVoteData, signature, payload);
+		return new Vote(this.self, timestampedVoteData, signature);
 	}
 }

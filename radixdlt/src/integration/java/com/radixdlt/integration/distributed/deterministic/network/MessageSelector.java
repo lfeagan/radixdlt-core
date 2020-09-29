@@ -21,8 +21,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Proposal;
+import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.Vote;
 import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.epoch.EpochView;
 
@@ -96,11 +97,17 @@ public interface MessageSelector {
 		final long maxViewNumber = view.number();
 		return messageList -> {
 			ControlledMessage message = selector.select(messageList);
-			if (message == null || !(message.message() instanceof NewView)) {
-				return message;
+			if (message == null) {
+				return null;
 			}
-			NewView nv = (NewView) message.message();
-			return (nv.getView().number() > maxViewNumber) ? null : message;
+			Object msg = message.message();
+			View v = null;
+			if (msg instanceof ViewTimeoutSigned) {
+				v = ((ViewTimeoutSigned) msg).view();
+			} else if (msg instanceof Vote) {
+				v = ((Vote) msg).getVoteData().getProposed().getView().previous();
+			}
+			return (v == null) || (v.number() <= maxViewNumber) ? message : null;
 		};
 	}
 

@@ -34,7 +34,6 @@ public class ProposalTest {
 	private BFTNode node;
 	private ECDSASignature signature;
 	private QuorumCertificate commitQc;
-	private long payload;
 
 	@Before
 	public void setUp() {
@@ -42,16 +41,14 @@ public class ProposalTest {
 		this.node = mock(BFTNode.class);
 		this.signature = mock(ECDSASignature.class);
 		this.commitQc = mock(QuorumCertificate.class);
-		this.payload = 123456L;
 
-		this.proposal = new Proposal(vertex, commitQc, node, signature, this.payload);
+		this.proposal = new Proposal(vertex, commitQc, node, signature);
 	}
 
 	@Test
 	public void testGetters() {
 		assertThat(this.proposal.getVertex()).isEqualTo(vertex);
 		assertThat(this.proposal.getCommittedQC()).isEqualTo(commitQc);
-		assertThat(this.proposal.getPayload()).isEqualTo(payload);
 	}
 
 	@Test

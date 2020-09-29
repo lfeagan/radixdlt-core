@@ -18,31 +18,39 @@
 package com.radixdlt.consensus.bft;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.radixdlt.consensus.HashSigner;
-import com.radixdlt.consensus.NewView;
+import com.radixdlt.consensus.Hasher;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.crypto.ECDSASignature;
+import com.radixdlt.crypto.Hash;
+
 import org.junit.Before;
 import org.junit.Test;
 
 public class NewViewSignerTest {
 	private NewViewSigner newViewSigner;
 	private BFTNode self = mock(BFTNode.class);
+	private Hasher hasher = mock(Hasher.class);
 	private HashSigner hashSigner = mock(HashSigner.class);
 
 	@Before
 	public void setup() {
-		newViewSigner = new NewViewSigner(self, hashSigner);
+		newViewSigner = new NewViewSigner(self, hasher, hashSigner);
 	}
 
 	@Test
 	public void when_create_new_view__then_should_be_correct() {
 		View view = mock(View.class);
 		when(view.number()).thenReturn(1L);
+		when(hasher.hash(any())).thenReturn(Hash.ZERO_HASH);
+		when(hashSigner.sign(any(Hash.class))).thenReturn(new ECDSASignature());
 
-		NewView newView = newViewSigner.signNewView(view, mock(QuorumCertificate.class), mock(QuorumCertificate.class));
+		ViewTimeoutSigned newView = newViewSigner.signNewView(view, mock(QuorumCertificate.class), mock(QuorumCertificate.class));
 
 		assertThat(newView.getAuthor()).isEqualTo(self);
 	}

@@ -21,12 +21,12 @@ import com.radixdlt.consensus.bft.BFTCommittedUpdate;
 import com.radixdlt.consensus.bft.BFTUpdate;
 import com.radixdlt.consensus.bft.VerifiedVertex;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.sync.GetVerticesRequest;
 import com.radixdlt.epochs.EpochsLedgerUpdate;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.BFTHeader;
@@ -93,7 +93,7 @@ public final class ControlledSender implements DeterministicSender {
 	}
 
 	@Override
-	public void sendNewView(NewView newView, BFTNode newViewLeader) {
+	public void sendViewTimeout(ViewTimeoutSigned newView, BFTNode newViewLeader) {
 		int receiver = this.network.lookup(newViewLeader);
 		handleMessage(messageRank(newView), new ControlledMessage(this.senderIndex, receiver, newView));
 	}
@@ -150,8 +150,8 @@ public final class ControlledSender implements DeterministicSender {
 		return MessageRank.of(proof.getEpoch(), proof.getView().number() + 3);
 	}
 
-	private MessageRank messageRank(NewView newView) {
-		return MessageRank.of(newView.getEpoch(), newView.getView().number());
+	private MessageRank messageRank(ViewTimeoutSigned newView) {
+		return MessageRank.of(newView.getEpoch(), newView.view().number());
 	}
 
 	private MessageRank messageRank(Proposal proposal) {

@@ -26,27 +26,27 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
-public class NewViewTest {
+public class ViewTimeoutTest {
 	private BFTNode author;
-	private NewView testObject;
+	private ViewTimeout testObject;
 	private View view;
 
 	@Before
 	public void setUp() {
 		this.view = View.of(1L);
 		this.author = mock(BFTNode.class);
-		this.testObject = new NewView(author, view, mock(QuorumCertificate.class), mock(QuorumCertificate.class), null);
+		this.testObject = new ViewTimeout(author, view, mock(QuorumCertificate.class), mock(QuorumCertificate.class));
 	}
 
 	@Test
 	public void equalsContract() {
-		EqualsVerifier.forClass(NewView.class)
+		EqualsVerifier.forClass(ViewTimeout.class)
 			.verify();
 	}
 
 	@Test
 	public void testGetters() {
-		assertEquals(this.view, this.testObject.getView());
+		assertEquals(this.view, this.testObject.view());
 		assertEquals(this.author, this.testObject.getAuthor());
 	}
 

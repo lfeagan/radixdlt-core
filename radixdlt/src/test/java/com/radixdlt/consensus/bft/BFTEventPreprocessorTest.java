@@ -26,10 +26,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.radixdlt.consensus.BFTEventProcessor;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.UnverifiedVertex;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.consensus.VoteData;
@@ -78,21 +78,21 @@ public class BFTEventPreprocessorTest {
 		);
 	}
 
-	private NewView createNewView(boolean goodView, boolean synced) {
-		NewView newView = mock(NewView.class);
-		when(newView.getSignature()).thenReturn(Optional.of(mock(ECDSASignature.class)));
-		when(newView.getAuthor()).thenReturn(self);
-		when(newView.getView()).thenReturn(goodView ? View.of(2) : View.of(0));
+	private ViewTimeoutSigned createViewTimeout(boolean goodView, boolean synced) {
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		when(viewTimeout.signature()).thenReturn(mock(ECDSASignature.class));
+		when(viewTimeout.getAuthor()).thenReturn(self);
+		when(viewTimeout.view()).thenReturn(goodView ? View.of(2) : View.of(0));
 		QuorumCertificate qc = mock(QuorumCertificate.class);
 		Hash vertexId = mock(Hash.class);
 		BFTHeader proposed = mock(BFTHeader.class);
 		when(qc.getProposed()).thenReturn(proposed);
 		when(proposed.getVertexId()).thenReturn(vertexId);
-		when(newView.getQC()).thenReturn(qc);
+		when(viewTimeout.getQC()).thenReturn(qc);
 		QuorumCertificate committedQC = mock(QuorumCertificate.class);
-		when(newView.getCommittedQC()).thenReturn(committedQC);
+		when(viewTimeout.getCommittedQC()).thenReturn(committedQC);
 		when(vertexStoreSync.syncToQC(eq(qc), eq(committedQC), any())).thenReturn(synced ? SyncResult.SYNCED : SyncResult.IN_PROGRESS);
-		return newView;
+		return viewTimeout;
 	}
 
 	private Proposal createProposal(boolean goodView, boolean synced) {
@@ -144,11 +144,11 @@ public class BFTEventPreprocessorTest {
 
 	@Test
 	public void when_process_irrelevant_new_view__event_gets_thrown_away() {
-		NewView newView = createNewView(false, true);
+		ViewTimeoutSigned viewTimeout = createViewTimeout(false, true);
 		when(syncQueues.isEmptyElseAdd(any())).thenReturn(true);
-		preprocessor.processNewView(newView);
+		preprocessor.processViewTimeout(viewTimeout);
 		verify(syncQueues, never()).add(any());
-		verify(forwardTo, never()).processNewView(any());
+		verify(forwardTo, never()).processViewTimeout(any());
 	}
 
 	@Test
@@ -162,21 +162,21 @@ public class BFTEventPreprocessorTest {
 
 	@Test
 	public void when_processing_new_view_as_not_proposer__then_new_view_get_thrown_away() {
-		NewView newView = createNewView(true, true);
-		when(syncQueues.isEmptyElseAdd(eq(newView))).thenReturn(true);
+		ViewTimeoutSigned viewTimeout = createViewTimeout(true, true);
+		when(syncQueues.isEmptyElseAdd(eq(viewTimeout))).thenReturn(true);
 		when(proposerElection.getProposer(View.of(2))).thenReturn(mock(BFTNode.class));
-		when(newView.getAuthor()).thenReturn(self);
-		preprocessor.processNewView(newView);
-		verify(forwardTo, never()).processNewView(any());
+		when(viewTimeout.getAuthor()).thenReturn(self);
+		preprocessor.processViewTimeout(viewTimeout);
+		verify(forwardTo, never()).processViewTimeout(any());
 	}
 
 	@Test
 	public void when_process_new_view_not_synced__then_new_view_is_queued() {
-		NewView newView = createNewView(true, false);
-		when(syncQueues.isEmptyElseAdd(eq(newView))).thenReturn(true);
-		preprocessor.processNewView(newView);
-		verify(syncQueues, times(1)).add(eq(newView));
-		verify(forwardTo, never()).processNewView(any());
+		ViewTimeoutSigned viewTimeout = createViewTimeout(true, false);
+		when(syncQueues.isEmptyElseAdd(eq(viewTimeout))).thenReturn(true);
+		preprocessor.processViewTimeout(viewTimeout);
+		verify(syncQueues, times(1)).add(eq(viewTimeout));
+		verify(forwardTo, never()).processViewTimeout(any());
 	}
 
 	@Test
@@ -190,11 +190,11 @@ public class BFTEventPreprocessorTest {
 
 	@Test
 	public void when_process_new_view_synced__then_new_view_is_forwarded() {
-		NewView newView = createNewView(true, true);
-		when(syncQueues.isEmptyElseAdd(eq(newView))).thenReturn(true);
-		preprocessor.processNewView(newView);
+		ViewTimeoutSigned viewTimeout = createViewTimeout(true, true);
+		when(syncQueues.isEmptyElseAdd(eq(viewTimeout))).thenReturn(true);
+		preprocessor.processViewTimeout(viewTimeout);
 		verify(syncQueues, never()).add(any());
-		verify(forwardTo, times(1)).processNewView(eq(newView));
+		verify(forwardTo, times(1)).processViewTimeout(eq(viewTimeout));
 	}
 
 	@Test

@@ -42,6 +42,6 @@ public class VoteSerializeTest extends SerializeObject<Vote> {
 		VoteData voteData = new VoteData(header, parent, null);
 		TimestampedVoteData timestampedVoteData = new TimestampedVoteData(voteData, 123456L);
 		BFTNode author = BFTNode.create(ECKeyPair.generateNew().getPublicKey());
-		return new Vote(author, timestampedVoteData, null, 0L);
+		return new Vote(author, timestampedVoteData, null);
 	}
 }

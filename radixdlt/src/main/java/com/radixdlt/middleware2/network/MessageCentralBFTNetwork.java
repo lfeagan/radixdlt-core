@@ -32,8 +32,8 @@ import org.radix.network.messaging.Message;
 import com.radixdlt.consensus.ConsensusEvent;
 import com.radixdlt.consensus.BFTEventsRx;
 import com.radixdlt.consensus.bft.BFTEventReducer.BFTEventSender;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Proposal;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.network.addressbook.AddressBook;
 import com.radixdlt.network.addressbook.Peer;
@@ -92,11 +92,11 @@ public final class MessageCentralBFTNetwork implements BFTEventSender, BFTNewVie
 	}
 
 	@Override
-	public void sendNewView(NewView newView, BFTNode nextLeader) {
+	public void sendViewTimeout(ViewTimeoutSigned viewTimeout, BFTNode nextLeader) {
 		if (this.self.equals(nextLeader)) {
-			this.localMessages.onNext(newView);
+			this.localMessages.onNext(viewTimeout);
 		} else {
-			ConsensusEventMessage message = new ConsensusEventMessage(this.magic, newView);
+			ConsensusEventMessage message = new ConsensusEventMessage(this.magic, viewTimeout);
 			send(message, nextLeader);
 		}
 	}

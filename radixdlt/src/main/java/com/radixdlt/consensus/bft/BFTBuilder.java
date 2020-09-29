@@ -164,7 +164,6 @@ public final class BFTBuilder {
 		);
 
 		return new BFTEventVerifier(
-			self,
 			validatorSet,
 			preprocessor,
 			hasher,

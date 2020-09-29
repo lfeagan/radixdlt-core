@@ -35,8 +35,8 @@ import java.util.Optional;
 /**
  * Represents a vote on a vertex
  */
+@Immutable
 @SerializerId2("consensus.vote")
-@Immutable // author cannot be but is effectively final because of serializer
 public final class Vote implements ConsensusEvent {
 	@JsonProperty(SerializerConstants.SERIALIZER_NAME)
 	@DsonOutput(value = {Output.API, Output.WIRE, Output.PERSIST})
@@ -52,25 +52,19 @@ public final class Vote implements ConsensusEvent {
 	@DsonOutput(Output.ALL)
 	private final ECDSASignature signature; // may be null if not signed (e.g. for genesis)
 
-	@JsonProperty("payload")
-	@DsonOutput(Output.ALL)
-	private final long payload;
-
 	@JsonCreator
 	Vote(
 		@JsonProperty("author") byte[] author,
 		@JsonProperty("vote_data") TimestampedVoteData voteData,
-		@JsonProperty("signature") ECDSASignature signature,
-		@JsonProperty("payload") long payload
+		@JsonProperty("signature") ECDSASignature signature
 	) throws PublicKeyException {
-		this(BFTNode.fromPublicKeyBytes(author), voteData, signature, payload);
+		this(BFTNode.fromPublicKeyBytes(author), voteData, signature);
 	}
 
-	public Vote(BFTNode author, TimestampedVoteData voteData, ECDSASignature signature, long payload) {
+	public Vote(BFTNode author, TimestampedVoteData voteData, ECDSASignature signature) {
 		this.author = Objects.requireNonNull(author);
 		this.voteData = Objects.requireNonNull(voteData);
 		this.signature = signature;
-		this.payload = payload;
 	}
 
 	@Override
@@ -95,10 +89,6 @@ public final class Vote implements ConsensusEvent {
 		return Optional.ofNullable(this.signature);
 	}
 
-	public long getPayload() {
-		return this.payload;
-	}
-
 	@JsonProperty("author")
 	@DsonOutput(Output.ALL)
 	private byte[] getSerializerAuthor() {
@@ -113,7 +103,7 @@ public final class Vote implements ConsensusEvent {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.author, this.voteData, this.signature, this.payload);
+		return Objects.hash(this.author, this.voteData, this.signature);
 	}
 
 	@Override
@@ -123,11 +113,9 @@ public final class Vote implements ConsensusEvent {
 		}
 		if (o instanceof Vote) {
 			Vote other = (Vote) o;
-			return
-				this.payload == other.payload
-					&& Objects.equals(this.author, other.author)
-					&& Objects.equals(this.voteData, other.voteData)
-					&& Objects.equals(this.signature, other.signature);
+			return Objects.equals(this.author, other.author)
+				&& Objects.equals(this.voteData, other.voteData)
+				&& Objects.equals(this.signature, other.signature);
 		}
 		return false;
 	}

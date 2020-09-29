@@ -17,41 +17,45 @@
 
 package com.radixdlt.consensus.bft;
 
+import com.radixdlt.SecurityCritical;
+import com.radixdlt.SecurityCritical.SecurityKind;
 import com.radixdlt.consensus.BFTEventProcessor;
+import com.radixdlt.consensus.BFTHeader;
+import com.radixdlt.consensus.ConsensusEvent;
 import com.radixdlt.consensus.HashVerifier;
 import com.radixdlt.consensus.Hasher;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.TimestampedVoteData;
+import com.radixdlt.consensus.UnverifiedVertex;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.crypto.ECDSASignature;
 import com.radixdlt.crypto.ECPublicKey;
 import com.radixdlt.crypto.Hash;
-import com.radixdlt.utils.Longs;
 import java.util.Objects;
+import java.util.Optional;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
  * Verifies signatures of BFT messages then forwards to the next processor
  */
+@SecurityCritical({ SecurityKind.SIG_VERIFY, SecurityKind.GENERAL })
 public final class BFTEventVerifier implements BFTEventProcessor {
 	private static final Logger log = LogManager.getLogger();
 
-	private final BFTNode self;
 	private final BFTValidatorSet validatorSet;
 	private final BFTEventProcessor forwardTo;
 	private final Hasher hasher;
 	private final HashVerifier verifier;
 
 	public BFTEventVerifier(
-		BFTNode self,
 		BFTValidatorSet validatorSet,
 		BFTEventProcessor forwardTo,
 		Hasher hasher,
 		HashVerifier verifier
 	) {
-		this.self = Objects.requireNonNull(self);
 		this.validatorSet = Objects.requireNonNull(validatorSet);
 		this.hasher = Objects.requireNonNull(hasher);
 		this.verifier = Objects.requireNonNull(verifier);
@@ -65,68 +69,63 @@ public final class BFTEventVerifier implements BFTEventProcessor {
 
 	@Override
 	public void processVote(Vote vote) {
-		final BFTNode node = vote.getAuthor();
-		if (!validatorSet.containsNode(node)) {
-			log.warn("{}: CONSENSUS_EVENT: Received event from author={} not in validator set={}",
-				this.self::getSimpleName, node::getSimpleName, () -> this.validatorSet
-			);
-			return;
-		}
-
-		// TODO: Remove IllegalArgumentException
-		final TimestampedVoteData voteData = vote.getTimestampedVoteData();
-		final Hash voteHash = this.hasher.hash(voteData);
-		final ECDSASignature signature = vote.getSignature().orElseThrow(() -> new IllegalArgumentException("vote is missing signature"));
-		final ECPublicKey key = node.getKey();
-		if (!this.verifier.verify(key, voteHash, signature)) {
-			log.info("{}: Ignoring invalid signature from author {}", self::getSimpleName, node::getSimpleName);
-			return;
-		}
-
-		forwardTo.processVote(vote);
+		validAuthor(vote).ifPresent(node ->
+			vote.getSignature().ifPresentOrElse(signature -> {
+				final TimestampedVoteData voteData = vote.getTimestampedVoteData();
+				final Hash voteHash = this.hasher.hash(voteData);
+				if (!this.verifier.verify(node.getKey(), voteHash, signature)) {
+					if (log.isInfoEnabled()) {
+						// Some help for mocks that don't provide this
+						BFTHeader proposed = (voteData == null) ? null : voteData.getProposed();
+						View view = (proposed == null) ? null : proposed.getView();
+						log.info("Vote from author {} in view {} has invalid signature", node, view);
+					}
+				} else {
+					forwardTo.processVote(vote);
+				}
+			}, () -> {
+				if (log.isInfoEnabled()) {
+					// Some help for mocks that don't provide this
+					TimestampedVoteData voteData = vote.getTimestampedVoteData();
+					BFTHeader proposed = (voteData == null) ? null : voteData.getProposed();
+					View view = (proposed == null) ? null : proposed.getView();
+					log.info("Vote from author {} in view {} is missing signature", node, view);
+				}
+			})
+		);
 	}
 
 	@Override
-	public void processNewView(NewView newView) {
-		final BFTNode node = newView.getAuthor();
-		if (!validatorSet.containsNode(node)) {
-			log.warn("{}: CONSENSUS_EVENT: Received event from author={} not in validator set={}",
-				this.self::getSimpleName, node::getSimpleName, () -> this.validatorSet
-			);
-			return;
-		}
-
-		final ECPublicKey key = node.getKey();
-		final Hash newViewId = Hash.of(Longs.toByteArray(newView.getView().number()));
-		// TODO: Remove IllegalArgumentException
-		final ECDSASignature signature = newView.getSignature().orElseThrow(() -> new IllegalArgumentException("new-view is missing signature"));
-		if (!this.verifier.verify(key, newViewId, signature)) {
-			log.info("{}: Ignoring invalid signature from author {}", self::getSimpleName, node::getSimpleName);
-			return;
-		}
-
-		forwardTo.processNewView(newView);
+	public void processViewTimeout(ViewTimeoutSigned viewTimeout) {
+		validAuthor(viewTimeout).ifPresent(node -> {
+			final ECPublicKey key = node.getKey();
+			final Hash newViewId = this.hasher.hash(viewTimeout.viewTimeout());
+			final ECDSASignature signature = viewTimeout.signature();
+			if (!this.verifier.verify(key, newViewId, signature)) {
+				log.info("ViewTimeout from author {} in view {} has invalid signature", node, viewTimeout.view());
+			} else {
+				forwardTo.processViewTimeout(viewTimeout);
+			}
+		});
 	}
 
 	@Override
 	public void processProposal(Proposal proposal) {
-		final BFTNode node = proposal.getAuthor();
-		if (!validatorSet.containsNode(node)) {
-			log.warn("{}: CONSENSUS_EVENT: Received event from author={} not in validator set={}",
-				this.self::getSimpleName, node::getSimpleName, () -> this.validatorSet
-			);
-			return;
-		}
-
-		final ECPublicKey key = node.getKey();
-		final Hash vertexHash = this.hasher.hash(proposal.getVertex());
-		final ECDSASignature signature = proposal.getSignature();
-		if (!this.verifier.verify(key, vertexHash, signature)) {
-			log.info("{}: Ignoring invalid signature from author {}", self::getSimpleName, node::getSimpleName);
-			return;
-		}
-
-		forwardTo.processProposal(proposal);
+		validAuthor(proposal).ifPresent(node -> {
+			final ECPublicKey key = node.getKey();
+			final Hash vertexHash = this.hasher.hash(proposal.getVertex());
+			final ECDSASignature signature = proposal.getSignature();
+			if (!this.verifier.verify(key, vertexHash, signature)) {
+				if (log.isInfoEnabled()) {
+					// Some help for mocks that don't provide this
+					UnverifiedVertex vertex = proposal.getVertex();
+					View view = (vertex == null) ? null : vertex.getView();
+					log.info("Proposal from author {} in view {} has invalid signature", node, view);
+				}
+			} else {
+				forwardTo.processProposal(proposal);
+			}
+		});
 	}
 
 	@Override
@@ -137,5 +136,14 @@ public final class BFTEventVerifier implements BFTEventProcessor {
 	@Override
 	public void processBFTUpdate(BFTUpdate update) {
 		forwardTo.processBFTUpdate(update);
+	}
+
+	private Optional<BFTNode> validAuthor(ConsensusEvent event) {
+		BFTNode node = event.getAuthor();
+		if (!validatorSet.containsNode(node)) {
+			log.warn("CONSENSUS_EVENT: {} from author {} not in validator set {}", event.getClass().getSimpleName(), node, this.validatorSet);
+			return Optional.empty();
+		}
+		return Optional.of(node);
 	}
 }

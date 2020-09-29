@@ -22,8 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.errorprone.annotations.Immutable;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.consensus.bft.View;
-import com.radixdlt.crypto.ECDSASignature;
 import com.radixdlt.crypto.exception.PublicKeyException;
+import com.radixdlt.crypto.ECPublicKey;
 import com.radixdlt.serialization.DsonOutput;
 import com.radixdlt.serialization.DsonOutput.Output;
 import com.radixdlt.serialization.SerializerConstants;
@@ -31,66 +31,67 @@ import com.radixdlt.serialization.SerializerDummy;
 import com.radixdlt.serialization.SerializerId2;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
- * Represents a new-view message from the pacemaker
+ * Represents a view timeout message from the pacemaker
  */
-@SerializerId2("consensus.newview")
-@Immutable // view and author cannot be but are effectively final because of serializer
-public final class NewView implements RequiresSyncConsensusEvent {
+@Immutable
+@SerializerId2("consensus.view_timeout")
+public final class ViewTimeout implements RequiresSyncConsensusEvent {
 	@JsonProperty(SerializerConstants.SERIALIZER_NAME)
-	@DsonOutput(value = {Output.API, Output.WIRE, Output.PERSIST})
-	SerializerDummy serializer = SerializerDummy.DUMMY;
-
-	@JsonProperty("qc")
 	@DsonOutput(Output.ALL)
-	private final QuorumCertificate qc;
+	SerializerDummy serializer = SerializerDummy.DUMMY;
 
 	private final BFTNode author;
 
 	private final View view;
 
-	@JsonProperty("committedQC")
+	@JsonProperty("qc")
+	@DsonOutput(Output.ALL)
+	private final QuorumCertificate qc;
+
+	@JsonProperty("committed_qc")
 	@DsonOutput(Output.ALL)
 	private final QuorumCertificate committedQC;
 
-	@JsonProperty("signature")
-	@DsonOutput(Output.ALL)
-	private final ECDSASignature signature; // may be null if not signed (e.g. for genesis)
-
 	@JsonCreator
-	NewView(
+	ViewTimeout(
 		@JsonProperty("author") byte[] author,
-		@JsonProperty("view") Long view,
+		@JsonProperty("view") long view,
 		@JsonProperty("qc") QuorumCertificate qc,
-		@JsonProperty("committedQC") QuorumCertificate committedQC,
-		@JsonProperty("signature") ECDSASignature signature
+		@JsonProperty("committed_qc") QuorumCertificate committedQC
 	) throws PublicKeyException {
-		this(BFTNode.fromPublicKeyBytes(author), view != null ? View.of(view) : null, qc, committedQC, signature);
+		this(BFTNode.create(ECPublicKey.fromBytes(author)), View.of(view), qc, committedQC);
 	}
 
-	public NewView(BFTNode author, View view, QuorumCertificate qc, QuorumCertificate committedQC, ECDSASignature signature) {
+	/**
+	 * Signals to the receiver that a view timeout has occurred for the author.
+	 *
+	 * @param author The author of the timeout message
+	 * @param view The view that timed out
+	 * @param qc The highest QC that the author has seen
+	 * @param committedQC The highest committed QC that the author has seen
+	 */
+	public ViewTimeout(BFTNode author, View view, QuorumCertificate qc, QuorumCertificate committedQC) {
 		this.author = Objects.requireNonNull(author);
 		this.view = Objects.requireNonNull(view);
 		this.qc = Objects.requireNonNull(qc);
 		this.committedQC = committedQC;
-		this.signature = signature;
 	}
 
 	@Override
 	public long getEpoch() {
-		return qc.getProposed().getLedgerHeader().getEpoch();
+		return this.qc.getProposed().getLedgerHeader().getEpoch();
 	}
 
 	@Override
 	public QuorumCertificate getCommittedQC() {
-		return committedQC;
+		return this.committedQC;
 	}
 
 	@Override
 	public QuorumCertificate getQC() {
-		return qc;
+		return this.qc;
 	}
 
 	@Override
@@ -103,8 +104,8 @@ public final class NewView implements RequiresSyncConsensusEvent {
 		return view;
 	}
 
-	public Optional<ECDSASignature> getSignature() {
-		return Optional.ofNullable(this.signature);
+	public View view() {
+		return this.view;
 	}
 
 	@JsonProperty("view")
@@ -124,26 +125,24 @@ public final class NewView implements RequiresSyncConsensusEvent {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
+		if (o instanceof ViewTimeout) {
+			ViewTimeout newView = (ViewTimeout) o;
+			return Objects.equals(this.author, newView.author)
+				&& Objects.equals(this.view, newView.view)
+				&& Objects.equals(this.qc, newView.qc)
+				&& Objects.equals(this.committedQC, newView.committedQC);
 		}
-		NewView newView = (NewView) o;
-		return Objects.equals(author, newView.author)
-			&& Objects.equals(view, newView.view)
-			&& Objects.equals(qc, newView.qc)
-			&& Objects.equals(signature, newView.signature)
-			&& Objects.equals(committedQC, newView.committedQC);
+		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(author, view, qc, signature, committedQC);
+		return Objects.hash(this.author, this.view, this.qc, this.committedQC);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%s{epoch=%s view=%s qc=%s author=%s}",
-			getClass().getSimpleName(), this.getEpoch(), view, qc, author.getSimpleName()
-		);
+		return String.format("%s{epoch=%s view=%s author=%s qc=%s}",
+			getClass().getSimpleName(), this.getEpoch(), this.view, this.author, this.qc);
 	}
 }

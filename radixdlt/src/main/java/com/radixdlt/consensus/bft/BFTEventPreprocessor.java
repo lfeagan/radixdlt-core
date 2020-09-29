@@ -18,10 +18,9 @@
 package com.radixdlt.consensus.bft;
 
 import com.radixdlt.consensus.BFTEventProcessor;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.RequiresSyncConsensusEvent;
-import com.radixdlt.consensus.UnverifiedVertex;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.consensus.bft.BFTSyncer.SyncResult;
 import com.radixdlt.consensus.bft.SyncQueues.SyncQueue;
@@ -80,8 +79,8 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 
 		// Explicitly using switch case method here rather than functional method
 		// to process these events due to much better performance
-		if (event instanceof NewView) {
-			final NewView newView = (NewView) event;
+		if (event instanceof ViewTimeoutSigned) {
+			final ViewTimeoutSigned newView = (ViewTimeoutSigned) event;
 			return this.processNewViewInternal(newView);
 		}
 
@@ -101,9 +100,9 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 
 		// Explicitly using switch case method here rather than functional method
 		// to process these events due to much better performance
-		if (event instanceof NewView) {
-			final NewView newView = (NewView) event;
-			return this.processNewViewInternal(newView);
+		if (event instanceof ViewTimeoutSigned) {
+			final ViewTimeoutSigned viewTimeout = (ViewTimeoutSigned) event;
+			return this.processNewViewInternal(viewTimeout);
 		}
 
 		if (event instanceof Proposal) {
@@ -118,7 +117,7 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 	public void processBFTUpdate(BFTUpdate update) {
 		Hash vertexId = update.getInsertedVertex().getId();
 
-		log.trace("{}: LOCAL_SYNC: {}", this.self::getSimpleName, () -> vertexId);
+		log.trace("LOCAL_SYNC: {}", vertexId);
 		for (SyncQueue queue : queues.getQueues()) {
 			if (peekAndExecute(queue, vertexId)) {
 				queue.pop();
@@ -133,7 +132,7 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 
 	@Override
 	public void processVote(Vote vote) {
-		log.trace("{}: VOTE: PreProcessing {}", this.self::getSimpleName, () -> vote);
+		log.trace("VOTE: PreProcessing {}", vote);
 
 		// only do something if we're actually the leader for the vote
 		final View view = vote.getVoteData().getProposed().getView();
@@ -142,34 +141,33 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 		// TODO: an expensive operation. Need to figure out a way of mitigating this problem
 		// TODO: perhaps through filter views too out of bounds
 		if (!Objects.equals(proposerElection.getProposer(view), this.self)) {
-			log.warn("{}: VOTE: Ignoring confused vote {} for {}",
-				this.self::getSimpleName, vote::hashCode, vote.getVoteData().getProposed()::getView);
+			log.warn("VOTE: Ignoring confused vote {} for {}", vote.hashCode(), view);
 			return;
 		}
 
 		forwardTo.processVote(vote);
 	}
 
-	private boolean processNewViewInternal(NewView newView) {
-		log.trace("{}: NEW_VIEW: PreProcessing {}", this.self::getSimpleName, () -> newView);
+	private boolean processNewViewInternal(ViewTimeoutSigned newView) {
+		log.trace("ViewTimeout: PreProcessing {}", newView);
 
 		// only do something if we're actually the leader for the view
-		final View view = newView.getView();
+		final View view = newView.view();
 		if (!Objects.equals(proposerElection.getProposer(view), this.self)) {
-			log.warn("{}: NEW_VIEW: Got confused new-view {} for view {}", this.self::getSimpleName, () -> newView, newView::getView);
+			log.warn("ViewTimeout: Got confused new-view {} for view {}", newView, view);
 			return true;
 		}
 
 		final View currentView = pacemakerState.getCurrentView();
-		if (newView.getView().compareTo(currentView) < 0) {
-			log.trace("{}: NEW_VIEW: Ignoring {} Current is: {}", this.self::getSimpleName, newView::getView, () -> currentView);
+		if (view.compareTo(currentView) < 0) {
+			log.trace("ViewTimeout: Ignoring {} Current is: {}", view, currentView);
 			return true;
 		}
 
 		SyncResult syncResult = this.bftSyncer.syncToQC(newView.getQC(), newView.getCommittedQC(), newView.getAuthor());
 		switch (syncResult) {
 			case SYNCED:
-				forwardTo.processNewView(newView);
+				forwardTo.processViewTimeout(newView);
 				return true;
 			case INVALID:
 				return true;
@@ -181,26 +179,25 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 	}
 
 	@Override
-	public void processNewView(NewView newView) {
-		log.trace("{}: NEW_VIEW: Queueing {}", this.self, newView);
-		if (queues.isEmptyElseAdd(newView)) {
-			if (!processNewViewInternal(newView)) {
-				log.debug("{}: NEW_VIEW: Queuing {} Waiting for Sync", this.self, newView);
-				queues.add(newView);
+	public void processViewTimeout(ViewTimeoutSigned viewTimeout) {
+		log.trace("ViewTimeout: Queueing {}", viewTimeout);
+		if (queues.isEmptyElseAdd(viewTimeout)) {
+			if (!processNewViewInternal(viewTimeout)) {
+				log.debug("ViewTimeout: Queuing {}, waiting for Sync", viewTimeout);
+				queues.add(viewTimeout);
 			}
 		} else {
-			log.trace("{}: NEW_VIEW added to queue", this.self);
+			log.trace("ViewTimeout added to queue");
 		}
 	}
 
 	private boolean processProposalInternal(Proposal proposal) {
-		log.trace("{}: PROPOSAL: PreProcessing {}", this.self::getSimpleName, () -> proposal);
+		log.trace("PROPOSAL: PreProcessing {}", proposal);
 
-		final UnverifiedVertex proposedVertex = proposal.getVertex();
-		final View proposedVertexView = proposedVertex.getView();
+		final View proposedVertexView = proposal.getVertex().getView();
 		final View currentView = this.pacemakerState.getCurrentView();
 		if (proposedVertexView.compareTo(currentView) < 0) {
-			log.trace("{}: PROPOSAL: Ignoring view {} Current is: {}", this.self::getSimpleName, () -> proposedVertexView, () -> currentView);
+			log.trace("PROPOSAL: Ignoring view {}, current is: {}", proposedVertexView, currentView);
 			return true;
 		}
 
@@ -220,12 +217,10 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 
 	@Override
 	public void processProposal(Proposal proposal) {
-		log.trace("{}: PROPOSAL: Queueing {}", this.self::getSimpleName, () -> proposal);
-		if (queues.isEmptyElseAdd(proposal)) {
-			if (!processProposalInternal(proposal)) {
-				log.debug("{}: PROPOSAL: Queuing {} Waiting for Sync", this.self::getSimpleName, () -> proposal);
-				queues.add(proposal);
-			}
+		log.trace("PROPOSAL: PreProcessing {}", proposal);
+		if (queues.isEmptyElseAdd(proposal) && !processProposalInternal(proposal)) {
+			log.debug("PROPOSAL: Queuing {}, waiting for Sync", proposal);
+			queues.add(proposal);
 		}
 	}
 

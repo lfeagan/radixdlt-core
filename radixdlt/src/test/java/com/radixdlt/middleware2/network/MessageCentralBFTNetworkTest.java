@@ -23,13 +23,13 @@ import static org.mockito.Mockito.*;
 
 import com.radixdlt.consensus.ConsensusEvent;
 import com.radixdlt.consensus.Proposal;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.crypto.ECKeyPair;
 import com.radixdlt.crypto.ECPublicKey;
 import com.radixdlt.network.addressbook.AddressBook;
 import com.radixdlt.network.addressbook.Peer;
 import com.radixdlt.network.messaging.MessageCentral;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.universe.Universe;
 import io.reactivex.rxjava3.observers.TestObserver;
@@ -58,10 +58,10 @@ public class MessageCentralBFTNetworkTest {
 	public void when_send_new_view_to_self__then_should_receive_new_view_message() {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.bftEvents().subscribe(testObserver);
-		NewView newView = mock(NewView.class);
-		network.sendNewView(newView, self);
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		network.sendViewTimeout(viewTimeout, self);
 		testObserver.awaitCount(1);
-		testObserver.assertValue(newView);
+		testObserver.assertValue(viewTimeout);
 	}
 
 	@Test
@@ -86,7 +86,7 @@ public class MessageCentralBFTNetworkTest {
 
 	@Test
 	public void when_send_new_view__then_message_central_should_be_sent_new_view_message() {
-		NewView newView = mock(NewView.class);
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
 		ECPublicKey leaderPk = ECKeyPair.generateNew().getPublicKey();
 		BFTNode leader = mock(BFTNode.class);
 		when(leader.getKey()).thenReturn(leaderPk);
@@ -94,16 +94,16 @@ public class MessageCentralBFTNetworkTest {
 		when(peer.getNID()).thenReturn(leaderPk.euid());
 		when(addressBook.peer(leaderPk.euid())).thenReturn(Optional.of(peer));
 
-		network.sendNewView(newView, leader);
+		network.sendViewTimeout(viewTimeout, leader);
 		verify(messageCentral, times(1)).send(eq(peer), any(ConsensusEventMessage.class));
 	}
 
 	@Test
 	public void when_send_new_view_to_nonexistent__then_no_message_sent() {
-		NewView newView = mock(NewView.class);
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
 		BFTNode node = mock(BFTNode.class);
 		when(node.getKey()).thenReturn(mock(ECPublicKey.class));
-		network.sendNewView(newView, node);
+		network.sendViewTimeout(viewTimeout, node);
 		verify(messageCentral, never()).send(any(), any());
 	}
 

@@ -35,11 +35,11 @@ import com.radixdlt.consensus.BFTConfiguration;
 import com.radixdlt.consensus.BFTEventProcessor;
 import com.radixdlt.consensus.BFTFactory;
 import com.radixdlt.consensus.ConsensusEvent;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.Ledger;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.UnverifiedVertex;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.bft.BFTSyncer.SyncResult;
@@ -169,7 +169,7 @@ public class EpochManagerTest {
 		epochManager.processGetVerticesRequest(mock(GetVerticesRequest.class));
 		epochManager.processGetVerticesResponse(mock(GetVerticesResponse.class));
 		epochManager.processLedgerUpdate(mock(EpochsLedgerUpdate.class));
-		epochManager.processConsensusEvent(mock(NewView.class));
+		epochManager.processConsensusEvent(mock(ViewTimeoutSigned.class));
 		epochManager.processConsensusEvent(mock(Proposal.class));
 		epochManager.processConsensusEvent(mock(Vote.class));
 	}
@@ -285,12 +285,12 @@ public class EpochManagerTest {
 
 		when(proposerElection.getProposer(any())).thenReturn(this.self);
 
-		NewView newView = mock(NewView.class);
-		when(newView.getView()).thenReturn(View.of(1));
-		when(newView.getAuthor()).thenReturn(this.self);
-		when(newView.getEpoch()).thenReturn(2L);
-		epochManager.processConsensusEvent(newView);
-		verify(eventProcessor, times(1)).processNewView(eq(newView));
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		when(viewTimeout.view()).thenReturn(View.of(1));
+		when(viewTimeout.getAuthor()).thenReturn(this.self);
+		when(viewTimeout.getEpoch()).thenReturn(2L);
+		epochManager.processConsensusEvent(viewTimeout);
+		verify(eventProcessor, times(1)).processViewTimeout(eq(viewTimeout));
 
 
 		when(pacemaker.getCurrentView()).thenReturn(View.of(0));

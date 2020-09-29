@@ -20,7 +20,7 @@ package com.radixdlt.consensus.bft;
 import com.radixdlt.consensus.BFTEventProcessor;
 import com.radixdlt.consensus.Command;
 import com.radixdlt.consensus.Hasher;
-import com.radixdlt.consensus.NewView;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.PendingVotes;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.QuorumCertificate;
@@ -36,9 +36,6 @@ import com.radixdlt.counters.SystemCounters;
 import com.radixdlt.counters.SystemCounters.CounterType;
 import com.radixdlt.crypto.Hash;
 import com.radixdlt.network.TimeSupplier;
-import com.radixdlt.utils.RTTStatistics;
-
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -89,7 +86,6 @@ public final class BFTEventReducer implements BFTEventProcessor {
 	private final BFTValidatorSet validatorSet;
 	private final SystemCounters counters;
 	private final TimeSupplier timeSupplier;
-	private final RTTStatistics rttStatistics = new RTTStatistics();
 	private final Hasher hasher;
 
 	public BFTEventReducer(
@@ -128,8 +124,7 @@ public final class BFTEventReducer implements BFTEventProcessor {
 
 	@Override
 	public void processVote(Vote vote) {
-		updateRttStatistics(vote);
-		log.trace("VOTE: Processing {}", () -> vote);
+		log.trace("VOTE: Processing {}", vote);
 		// accumulate votes into QCs in store
 		this.pendingVotes.insertVote(vote, this.validatorSet).ifPresent(qc -> {
 			log.trace("VOTE: Formed QC: {}", () -> qc);
@@ -138,9 +133,9 @@ public final class BFTEventReducer implements BFTEventProcessor {
 	}
 
 	@Override
-	public void processNewView(NewView newView) {
-		log.trace("NEW_VIEW: Processing {}", () -> newView);
-		this.pacemaker.processNewView(newView, validatorSet).ifPresent(view -> {
+	public void processViewTimeout(ViewTimeoutSigned viewTimeout) {
+		log.trace("NEW_VIEW: Processing {}", viewTimeout);
+		this.pacemaker.processViewTimeout(viewTimeout, validatorSet).ifPresent(view -> {
 			// Hotstuff's Event-Driven OnBeat
 			final QuorumCertificate highestQC = vertexStore.getHighestQC();
 			final QuorumCertificate highestCommitted = vertexStore.getHighestCommittedQC();
@@ -163,7 +158,7 @@ public final class BFTEventReducer implements BFTEventProcessor {
 			}
 
 			final UnverifiedVertex proposedVertex = UnverifiedVertex.createVertex(highestQC, view, nextCommand);
-			final Proposal proposal = safetyRules.signProposal(proposedVertex, highestCommitted, System.nanoTime());
+			final Proposal proposal = safetyRules.signProposal(proposedVertex, highestCommitted);
 			log.trace("Broadcasting PROPOSAL: {}", () -> proposal);
 			Set<BFTNode> nodes = validatorSet.getValidators().stream().map(BFTValidator::getNode).collect(Collectors.toSet());
 			this.counters.increment(CounterType.BFT_PROPOSALS_MADE);
@@ -178,15 +173,15 @@ public final class BFTEventReducer implements BFTEventProcessor {
 		final View proposedVertexView = proposedVertex.getView();
 		final View updatedView = this.pacemaker.getCurrentView();
 		if (proposedVertexView.compareTo(updatedView) != 0) {
-			log.trace("PROPOSAL: Ignoring view {} Current is: {}", () -> proposedVertexView, () -> updatedView);
+			log.trace("PROPOSAL: Ignoring view {} Current is: {}", proposedVertexView, updatedView);
 			return;
 		}
 
 		final BFTHeader header = vertexStore.insertVertex(proposedVertex);
 		final BFTNode currentLeader = this.proposerElection.getProposer(updatedView);
 		try {
-			final Vote vote = safetyRules.voteFor(proposedVertex, header, this.timeSupplier.currentTime(), proposal.getPayload());
-			log.trace("PROPOSAL: Sending VOTE to {}: {}", () -> currentLeader, () -> vote);
+			final Vote vote = safetyRules.voteFor(proposedVertex, header, this.timeSupplier.currentTime());
+			log.trace("PROPOSAL: Sending VOTE to {}: {}", currentLeader, vote);
 			sender.sendVote(vote, currentLeader);
 		} catch (SafetyViolationException e) {
 			log.error(() -> new FormattedMessage("PROPOSAL: Rejected {}", proposedVertex), e);
@@ -203,27 +198,12 @@ public final class BFTEventReducer implements BFTEventProcessor {
 
 	@Override
 	public void processLocalTimeout(View view) {
-		log.trace("LOCAL_TIMEOUT: Processing {}", () -> view);
+		log.trace("LOCAL_TIMEOUT: Processing {}", view);
 		this.pacemaker.processLocalTimeout(view);
 	}
 
 	@Override
 	public void start() {
 		this.pacemaker.processQC(this.vertexStore.getHighestQC(), this.vertexStore.getHighestCommittedQC());
-	}
-
-	private void updateRttStatistics(Vote vote) {
-		long durationNanos = System.nanoTime() - vote.getPayload();
-		if (durationNanos >= 0L) {
-			double durationMicros = durationNanos / 1e3;
-			this.rttStatistics.update(durationMicros);
-			EnumMap<CounterType, Long> values = new EnumMap<>(CounterType.class);
-			values.put(CounterType.BFT_VOTE_RTT_MIN,   Math.round(this.rttStatistics.min()));
-			values.put(CounterType.BFT_VOTE_RTT_MAX,   Math.round(this.rttStatistics.max()));
-			values.put(CounterType.BFT_VOTE_RTT_MEAN,  Math.round(this.rttStatistics.mean()));
-			values.put(CounterType.BFT_VOTE_RTT_SIGMA, Math.round(this.rttStatistics.sigma()));
-			values.put(CounterType.BFT_VOTE_RTT_COUNT, this.rttStatistics.count());
-			this.counters.setAll(values);
-		}
 	}
 }

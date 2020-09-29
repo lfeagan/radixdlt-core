@@ -18,8 +18,8 @@
 package com.radixdlt.consensus.bft;
 
 import com.radixdlt.consensus.BFTEventProcessor;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Proposal;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.Vote;
 
 /**
@@ -34,7 +34,7 @@ public enum EmptyBFTEventProcessor implements BFTEventProcessor {
 	}
 
 	@Override
-	public void processNewView(NewView newView) {
+	public void processViewTimeout(ViewTimeoutSigned viewTimeotu) {
 		// No-op
 	}
 

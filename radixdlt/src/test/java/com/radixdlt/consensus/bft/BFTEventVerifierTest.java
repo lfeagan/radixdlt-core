@@ -28,8 +28,8 @@ import static org.powermock.api.mockito.PowerMockito.when;
 import com.radixdlt.consensus.BFTEventProcessor;
 import com.radixdlt.consensus.HashVerifier;
 import com.radixdlt.consensus.Hasher;
-import com.radixdlt.consensus.NewView;
 import com.radixdlt.consensus.Proposal;
+import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.crypto.ECDSASignature;
 import java.util.Optional;
@@ -38,7 +38,6 @@ import org.junit.Test;
 
 public class BFTEventVerifierTest {
 
-	private BFTNode self;
 	private BFTValidatorSet validatorSet;
 	private BFTEventProcessor forwardTo;
 	private Hasher hasher;
@@ -47,12 +46,11 @@ public class BFTEventVerifierTest {
 
 	@Before
 	public void setup() {
-		this.self = mock(BFTNode.class);
 		this.validatorSet = mock(BFTValidatorSet.class);
 		this.forwardTo = mock(BFTEventProcessor.class);
 		this.hasher = mock(Hasher.class);
 		this.verifier = mock(HashVerifier.class);
-		this.eventVerifier = new BFTEventVerifier(self, validatorSet, forwardTo, hasher, verifier);
+		this.eventVerifier = new BFTEventVerifier(validatorSet, forwardTo, hasher, verifier);
 	}
 
 	@Test
@@ -112,42 +110,42 @@ public class BFTEventVerifierTest {
 	}
 
 	@Test
-	public void when_process_correct_newview_then_should_be_forwarded() {
-		NewView newView = mock(NewView.class);
+	public void when_process_correct_view_timeout_then_should_be_forwarded() {
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
 		BFTNode author = mock(BFTNode.class);
-		when(newView.getAuthor()).thenReturn(author);
-		when(newView.getView()).thenReturn(View.of(1));
-		when(newView.getSignature()).thenReturn(Optional.of(mock(ECDSASignature.class)));
+		when(viewTimeout.getAuthor()).thenReturn(author);
+		when(viewTimeout.view()).thenReturn(View.of(1));
+		when(viewTimeout.signature()).thenReturn(mock(ECDSASignature.class));
 		when(validatorSet.containsNode(eq(author))).thenReturn(true);
 		when(verifier.verify(any(), any(), any())).thenReturn(true);
-		eventVerifier.processNewView(newView);
-		verify(forwardTo, times(1)).processNewView(eq(newView));
+		eventVerifier.processViewTimeout(viewTimeout);
+		verify(forwardTo, times(1)).processViewTimeout(eq(viewTimeout));
 	}
 
 	@Test
-	public void when_process_bad_author_newview_then_should_not_be_forwarded() {
-		NewView newView = mock(NewView.class);
+	public void when_process_bad_author_view_timeout_then_should_not_be_forwarded() {
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
 		BFTNode author = mock(BFTNode.class);
-		when(newView.getAuthor()).thenReturn(author);
-		when(newView.getView()).thenReturn(View.of(1));
-		when(newView.getSignature()).thenReturn(Optional.of(mock(ECDSASignature.class)));
+		when(viewTimeout.getAuthor()).thenReturn(author);
+		when(viewTimeout.view()).thenReturn(View.of(1));
+		when(viewTimeout.signature()).thenReturn(mock(ECDSASignature.class));
 		when(validatorSet.containsNode(eq(author))).thenReturn(false);
 		when(verifier.verify(any(), any(), any())).thenReturn(true);
-		eventVerifier.processNewView(newView);
-		verify(forwardTo, never()).processNewView(eq(newView));
+		eventVerifier.processViewTimeout(viewTimeout);
+		verify(forwardTo, never()).processViewTimeout(eq(viewTimeout));
 	}
 
 	@Test
-	public void when_process_bad_signature_newview_then_should_not_be_forwarded() {
-		NewView newView = mock(NewView.class);
+	public void when_process_bad_signature_view_timeout_then_should_not_be_forwarded() {
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
 		BFTNode author = mock(BFTNode.class);
-		when(newView.getAuthor()).thenReturn(author);
-		when(newView.getView()).thenReturn(View.of(1));
-		when(newView.getSignature()).thenReturn(Optional.of(mock(ECDSASignature.class)));
+		when(viewTimeout.getAuthor()).thenReturn(author);
+		when(viewTimeout.view()).thenReturn(View.of(1));
+		when(viewTimeout.signature()).thenReturn(mock(ECDSASignature.class));
 		when(validatorSet.containsNode(eq(author))).thenReturn(true);
 		when(verifier.verify(any(), any(), any())).thenReturn(false);
-		eventVerifier.processNewView(newView);
-		verify(forwardTo, never()).processNewView(eq(newView));
+		eventVerifier.processViewTimeout(viewTimeout);
+		verify(forwardTo, never()).processViewTimeout(eq(viewTimeout));
 	}
 
 
