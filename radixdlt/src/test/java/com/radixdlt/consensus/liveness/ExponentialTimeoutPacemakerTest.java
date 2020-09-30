@@ -75,6 +75,7 @@ public class ExponentialTimeoutPacemakerTest {
 	private ProceedToViewSender proceedToViewSender;
 	private PacemakerTimeoutSender timeoutSender;
 	private PacemakerInfoSender infoSender;
+	private QuorumCertificate genesisQC;
 	private long timeout;
 	private double rate;
 	private int maxExponent;
@@ -89,34 +90,38 @@ public class ExponentialTimeoutPacemakerTest {
 		this.proceedToViewSender = mock(ProceedToViewSender.class);
 		this.infoSender = mock(PacemakerInfoSender.class);
 		this.timeoutSender = mock(PacemakerTimeoutSender.class);
+		this.genesisQC = mock(QuorumCertificate.class);
+		when(this.genesisQC.getView()).thenReturn(View.genesis());
+		Pair<BFTHeader, VerifiedLedgerHeaderAndProof> header = Pair.of(mock(BFTHeader.class), mock(VerifiedLedgerHeaderAndProof.class));
+		when(this.genesisQC.getCommittedAndLedgerStateProof()).thenReturn(Optional.of(header));
 		this.pacemaker = new ExponentialTimeoutPacemaker(this.timeout, this.rate, this.maxExponent, this.proceedToViewSender,
-			this.timeoutSender, this.infoSender);
+			this.timeoutSender, this.infoSender, this.genesisQC);
 	}
 
 	@Test
 	public void when_creating_pacemaker_with_invalid_timeout__then_exception_is_thrown() {
 		assertThatThrownBy(() -> new ExponentialTimeoutPacemaker(0, 1.2, 1,
-			this.proceedToViewSender, this.timeoutSender, this.infoSender)
+			this.proceedToViewSender, this.timeoutSender, this.infoSender, this.genesisQC)
 		)
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessageStartingWith("timeoutMilliseconds must be > 0");
 		assertThatThrownBy(() -> new ExponentialTimeoutPacemaker(-1, 1.2, 1,
-			this.proceedToViewSender, this.timeoutSender, this.infoSender)
+			this.proceedToViewSender, this.timeoutSender, this.infoSender, this.genesisQC)
 		)
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessageStartingWith("timeoutMilliseconds must be > 0");
 		assertThatThrownBy(() -> new ExponentialTimeoutPacemaker(1, 1.0, 1,
-			this.proceedToViewSender, this.timeoutSender, this.infoSender)
+			this.proceedToViewSender, this.timeoutSender, this.infoSender, this.genesisQC)
 		)
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessageStartingWith("rate must be > 1.0");
 		assertThatThrownBy(() -> new ExponentialTimeoutPacemaker(1, 1.2, -1,
-			this.proceedToViewSender, this.timeoutSender, this.infoSender)
+			this.proceedToViewSender, this.timeoutSender, this.infoSender, this.genesisQC)
 		)
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessageStartingWith("maxExponent must be >= 0");
 		assertThatThrownBy(() -> new ExponentialTimeoutPacemaker(1, 100.0, 100,
-			this.proceedToViewSender, this.timeoutSender, this.infoSender)
+			this.proceedToViewSender, this.timeoutSender, this.infoSender, this.genesisQC)
 		)
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessageStartingWith("Maximum timeout value");
@@ -151,7 +156,7 @@ public class ExponentialTimeoutPacemakerTest {
 	public void when_process_timeout_for_earlier_view__then_view_should_not_change() {
 		assertThat(pacemaker.getCurrentView()).isEqualTo(View.of(0L));
 		pacemaker.processNextView(View.of(0L));
-		verify(proceedToViewSender, times(1)).sendProceedToNextView(eq(View.of(1L)), any(), any());
+		verify(proceedToViewSender, times(1)).sendProceedToNextView(eq(View.of(1L)), any());
 		assertThat(pacemaker.getCurrentView()).isEqualByComparingTo(View.of(1L));
 		pacemaker.processLocalTimeout(View.of(0L));
 		assertThat(pacemaker.getCurrentView()).isEqualByComparingTo(View.of(1L));
@@ -161,10 +166,10 @@ public class ExponentialTimeoutPacemakerTest {
 	public void when_process_qc_twice_for_same_view__then_view_should_not_change() {
 		assertThat(pacemaker.getCurrentView()).isEqualByComparingTo(View.of(0L));
 		pacemaker.processNextView(View.of(0L));
-		verify(proceedToViewSender, times(1)).sendProceedToNextView(eq(View.of(1L)), any(), any());
+		verify(proceedToViewSender, times(1)).sendProceedToNextView(eq(View.of(1L)), any());
 		assertThat(pacemaker.getCurrentView()).isEqualByComparingTo(View.of(1L));
 		pacemaker.processNextView(View.of(0L));
-		verify(proceedToViewSender, times(1)).sendProceedToNextView(any(), any(), any());
+		verify(proceedToViewSender, times(1)).sendProceedToNextView(any(), any());
 		assertThat(pacemaker.getCurrentView()).isEqualByComparingTo(View.of(1L));
 		assertThat(pacemaker.getCurrentView()).isEqualByComparingTo(View.of(1L));
 	}
@@ -316,7 +321,8 @@ public class ExponentialTimeoutPacemakerTest {
 		for (int i = 0; i < numPacemakers; ++i) {
 			final int j = i;
 			final PacemakerTimeoutSender timeoutSender = (view, timeout) -> timeouts.push(new TimeoutHolder(j, view, baseTime.get() + timeout));
-			pacemaker[i] = new ExponentialTimeoutPacemaker(1L, testRate, numPacemakers, this.proceedToViewSender, timeoutSender, this.infoSender);
+			pacemaker[i] = new ExponentialTimeoutPacemaker(
+				1L, testRate, numPacemakers, this.proceedToViewSender, timeoutSender, this.infoSender, this.genesisQC);
 		}
 
 		for (int i = 1; i < numPacemakers; ++i) {
@@ -357,10 +363,12 @@ public class ExponentialTimeoutPacemakerTest {
 		final ExponentialTimeoutPacemaker[] pacemaker = new ExponentialTimeoutPacemaker[2];
 
 		final PacemakerTimeoutSender timeoutSender0 = (view, timeout) -> timeouts.add(new TimeoutHolder(0, view, baseTime.get() + timeout));
-		pacemaker[0] = new ExponentialTimeoutPacemaker(1L, testRate, pacemakerMaxExponent, this.proceedToViewSender, timeoutSender0, this.infoSender);
+		pacemaker[0] = new ExponentialTimeoutPacemaker(
+			1L, testRate, pacemakerMaxExponent, this.proceedToViewSender, timeoutSender0, this.infoSender, this.genesisQC);
 
 		PacemakerTimeoutSender timeoutSender1 = (view, timeout) -> timeouts.add(new TimeoutHolder(1, view, baseTime.get() + timeout));
-		pacemaker[1] = new ExponentialTimeoutPacemaker(1L, testRate, pacemakerMaxExponent, this.proceedToViewSender, timeoutSender1, this.infoSender);
+		pacemaker[1] = new ExponentialTimeoutPacemaker(
+			1L, testRate, pacemakerMaxExponent, this.proceedToViewSender, timeoutSender1, this.infoSender, this.genesisQC);
 
 		// get pacemaker[0] at least 2 views ahead and until timeout > setuptime
 		pacemaker[0].processNextView(pacemaker[0].getCurrentView());

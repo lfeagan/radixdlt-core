@@ -21,7 +21,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.errorprone.annotations.Immutable;
 import com.radixdlt.consensus.bft.BFTNode;
+import com.radixdlt.consensus.bft.View;
 import com.radixdlt.crypto.ECDSASignature;
+import com.radixdlt.crypto.ECPublicKey;
 import com.radixdlt.crypto.exception.PublicKeyException;
 import com.radixdlt.serialization.DsonOutput;
 import com.radixdlt.serialization.DsonOutput.Output;
@@ -37,12 +39,16 @@ import java.util.Optional;
  */
 @Immutable
 @SerializerId2("consensus.vote")
-public final class Vote implements ConsensusEvent {
+public final class Vote implements RequiresSyncConsensusEvent {
 	@JsonProperty(SerializerConstants.SERIALIZER_NAME)
-	@DsonOutput(value = {Output.API, Output.WIRE, Output.PERSIST})
+	@DsonOutput(Output.ALL)
 	SerializerDummy serializer = SerializerDummy.DUMMY;
 
 	private final BFTNode author;
+
+	@JsonProperty("sync_info")
+	@DsonOutput(Output.ALL)
+	private final SyncInfo syncInfo;
 
 	@JsonProperty("vote_data")
 	@DsonOutput(Output.ALL)
@@ -53,28 +59,45 @@ public final class Vote implements ConsensusEvent {
 	private final ECDSASignature signature; // may be null if not signed (e.g. for genesis)
 
 	@JsonCreator
-	Vote(
+	private Vote(
 		@JsonProperty("author") byte[] author,
+		@JsonProperty("sync_info") SyncInfo syncInfo,
 		@JsonProperty("vote_data") TimestampedVoteData voteData,
 		@JsonProperty("signature") ECDSASignature signature
 	) throws PublicKeyException {
-		this(BFTNode.fromPublicKeyBytes(author), voteData, signature);
+		this(BFTNode.create(ECPublicKey.fromBytes(author)), syncInfo, voteData, signature);
 	}
 
-	public Vote(BFTNode author, TimestampedVoteData voteData, ECDSASignature signature) {
+	public Vote(BFTNode author, SyncInfo syncInfo, TimestampedVoteData voteData, ECDSASignature signature) {
 		this.author = Objects.requireNonNull(author);
+		this.syncInfo = Objects.requireNonNull(syncInfo);
 		this.voteData = Objects.requireNonNull(voteData);
 		this.signature = signature;
 	}
 
 	@Override
-	public long getEpoch() {
-		return voteData.getVoteData().getProposed().getLedgerHeader().getEpoch();
+	public BFTNode getAuthor() {
+		return this.author;
 	}
 
 	@Override
-	public BFTNode getAuthor() {
-		return author;
+	public long getEpoch() {
+		return this.voteData.getVoteData().getProposed().getLedgerHeader().getEpoch();
+	}
+
+	@Override
+	public View getView() {
+		return this.voteData.getVoteData().getProposed().getLedgerHeader().getView();
+	}
+
+	@Override
+	public QuorumCertificate getQC() {
+		return this.syncInfo.highestQC();
+	}
+
+	@Override
+	public QuorumCertificate getCommittedQC() {
+		return this.syncInfo.highestCommittedQC();
 	}
 
 	public VoteData getVoteData() {
@@ -97,13 +120,13 @@ public final class Vote implements ConsensusEvent {
 
 	@Override
 	public String toString() {
-		return String.format("%s{epoch=%s view=%s author=%s}", getClass().getSimpleName(),
-			this.getEpoch(), voteData.getProposed().getView(), author.getSimpleName());
+		return String.format("%s{author=%s, epoch=%s view=%s sync=%s}", getClass().getSimpleName(),
+			this.author, this.getEpoch(), this.getView(), this.syncInfo);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.author, this.voteData, this.signature);
+		return Objects.hash(this.author, this.syncInfo, this.voteData, this.signature);
 	}
 
 	@Override
@@ -112,10 +135,11 @@ public final class Vote implements ConsensusEvent {
 			return true;
 		}
 		if (o instanceof Vote) {
-			Vote other = (Vote) o;
-			return Objects.equals(this.author, other.author)
-				&& Objects.equals(this.voteData, other.voteData)
-				&& Objects.equals(this.signature, other.signature);
+			Vote that = (Vote) o;
+			return Objects.equals(this.author, that.author)
+				&& Objects.equals(this.syncInfo, that.syncInfo)
+				&& Objects.equals(this.voteData, that.voteData)
+				&& Objects.equals(this.signature, that.signature);
 		}
 		return false;
 	}

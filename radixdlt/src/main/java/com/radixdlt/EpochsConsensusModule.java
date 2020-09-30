@@ -118,7 +118,7 @@ public class EpochsConsensusModule extends AbstractModule {
 
 	@Provides
 	private PacemakerFactory pacemakerFactory(NewViewSigner newViewSigner, BFTNewViewSender bftNewViewSender) {
-		return (timeoutSender, infoSender, proposerElection) -> {
+		return (timeoutSender, infoSender, proposerElection, genesisQC) -> {
 			final ProceedToViewSender proceedToViewSender = new SignedNewViewToLeaderSender(
 				newViewSigner,
 				proposerElection,
@@ -130,7 +130,8 @@ public class EpochsConsensusModule extends AbstractModule {
 				this.pacemakerMaxExponent,
 				proceedToViewSender,
 				timeoutSender,
-				infoSender
+				infoSender,
+				genesisQC
 			);
 		};
 	}

@@ -34,7 +34,7 @@ import java.util.Optional;
 @SerializerId2("consensus.qc")
 public final class QuorumCertificate {
 	@JsonProperty(SerializerConstants.SERIALIZER_NAME)
-	@DsonOutput(value = {Output.API, Output.WIRE, Output.PERSIST})
+	@DsonOutput(Output.ALL)
 	SerializerDummy serializer = SerializerDummy.DUMMY;
 
 	@JsonProperty("signatures")
@@ -108,17 +108,17 @@ public final class QuorumCertificate {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
+		if (o instanceof QuorumCertificate) {
+			QuorumCertificate that = (QuorumCertificate) o;
+			return Objects.equals(this.signatures, that.signatures)
+				&& Objects.equals(this.voteData, that.voteData);
 		}
-		QuorumCertificate that = (QuorumCertificate) o;
-		return Objects.equals(signatures, that.signatures)
-			&& Objects.equals(voteData, that.voteData);
+		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(signatures, voteData);
+		return Objects.hash(this.signatures, this.voteData);
 	}
 
 	@Override

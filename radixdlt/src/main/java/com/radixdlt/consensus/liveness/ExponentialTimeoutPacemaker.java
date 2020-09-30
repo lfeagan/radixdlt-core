@@ -20,6 +20,7 @@ package com.radixdlt.consensus.liveness;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.RateLimiter;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.bft.BFTValidatorSet;
@@ -38,7 +39,7 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 	 * Hotstuff's Event-Driven OnNextSyncView
  	 */
 	public interface ProceedToViewSender {
-		void sendProceedToNextView(View view, QuorumCertificate qc, QuorumCertificate highestCommittedQC);
+		void sendProceedToNextView(View view, SyncInfo syncInfo);
 	}
 
 	/**
@@ -86,7 +87,8 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 		int maxExponent,
 		ProceedToViewSender proceedToViewSender,
 		PacemakerTimeoutSender timeoutSender,
-		PacemakerInfoSender pacemakerInfoSender
+		PacemakerInfoSender pacemakerInfoSender,
+		QuorumCertificate genesisQC
 	) {
 		if (timeoutMilliseconds <= 0) {
 			throw new IllegalArgumentException("timeoutMilliseconds must be > 0 but was " + timeoutMilliseconds);
@@ -101,6 +103,8 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 		if (maxTimeout > Long.MAX_VALUE) {
 			throw new IllegalArgumentException("Maximum timeout value of " + maxTimeout + " is too large");
 		}
+		this.qc = Objects.requireNonNull(genesisQC);
+		this.highestCommittedQC = Objects.requireNonNull(genesisQC);
 		this.timeoutMilliseconds = timeoutMilliseconds;
 		this.rate = rate;
 		this.maxExponent = maxExponent;
@@ -123,7 +127,7 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 		log.log(logLevel, "Starting View: {} with timeout {}ms", nextView, timeout);
 		this.currentView = nextView;
 		this.timeoutSender.scheduleTimeout(this.currentView, timeout);
-		this.proceedToViewSender.sendProceedToNextView(this.currentView, qc, highestCommittedQC);
+		this.proceedToViewSender.sendProceedToNextView(this.currentView, new SyncInfo(qc, highestCommittedQC));
 		this.pacemakerInfoSender.sendCurrentView(this.currentView);
 	}
 

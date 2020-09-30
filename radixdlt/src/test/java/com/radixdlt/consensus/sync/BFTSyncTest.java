@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.LedgerHeader;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.consensus.bft.BFTSyncer.SyncResult;
@@ -351,11 +352,13 @@ public class BFTSyncTest {
 		when(committedHeader.getView()).thenReturn(View.of(1));
 		when(committedQC.getCommittedAndLedgerStateProof())
 			.thenReturn(Optional.of(Pair.of(committedHeader, mock(VerifiedLedgerHeaderAndProof.class))));
+		SyncInfo syncInfo = mock(SyncInfo.class);
+		when(syncInfo.highestQC()).thenReturn(qc);
+		when(syncInfo.highestCommittedQC()).thenReturn(committedQC);
 
 		GetVerticesErrorResponse getVerticesErrorResponse = new GetVerticesErrorResponse(
 			mock(BFTNode.class),
-			qc,
-			committedQC
+			syncInfo
 		);
 		bftSync.processGetVerticesErrorResponse(getVerticesErrorResponse);
 

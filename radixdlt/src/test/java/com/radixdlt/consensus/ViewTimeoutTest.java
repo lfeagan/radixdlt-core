@@ -28,14 +28,16 @@ import static org.mockito.Mockito.mock;
 
 public class ViewTimeoutTest {
 	private BFTNode author;
-	private ViewTimeout testObject;
+	private long epoch;
 	private View view;
+	private ViewTimeout testObject;
 
 	@Before
 	public void setUp() {
 		this.view = View.of(1L);
+		this.epoch = 1;
 		this.author = mock(BFTNode.class);
-		this.testObject = new ViewTimeout(author, view, mock(QuorumCertificate.class), mock(QuorumCertificate.class));
+		this.testObject = new ViewTimeout(author, epoch, view);
 	}
 
 	@Test
@@ -46,8 +48,8 @@ public class ViewTimeoutTest {
 
 	@Test
 	public void testGetters() {
+		assertEquals(this.author, this.testObject.author());
+		assertEquals(this.epoch, this.testObject.epoch());
 		assertEquals(this.view, this.testObject.view());
-		assertEquals(this.author, this.testObject.getAuthor());
 	}
-
 }

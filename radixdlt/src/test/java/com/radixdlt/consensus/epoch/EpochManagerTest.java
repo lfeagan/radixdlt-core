@@ -131,7 +131,7 @@ public class EpochManagerTest {
 			this.syncEpochsRPCSender,
 			mock(LocalTimeoutSender.class),
 			syncRequestSender,
-			(timeoutSender, infoSender, proposerElection) -> this.pacemaker,
+			(timeoutSender, infoSender, proposerElection, genesisQC) -> this.pacemaker,
 			vertexStoreFactory,
 			bftSyncFactory,
 			requestProcessorFactory,

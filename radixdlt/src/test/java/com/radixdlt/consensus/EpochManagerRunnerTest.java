@@ -53,7 +53,7 @@ public class EpochManagerRunnerTest {
 		Vote vote = mock(Vote.class);
 
 		when(networkRx.bftEvents())
-			.thenReturn(Observable.just(newView, proposal, vote).concatWith(Observable.never()));
+			.thenReturn(Observable.<ConsensusEvent>just(newView, proposal, vote).concatWith(Observable.never()));
 
 		SyncVerticesRPCRx syncVerticesRPCRx = mock(SyncVerticesRPCRx.class);
 		GetVerticesRequest request = mock(GetVerticesRequest.class);

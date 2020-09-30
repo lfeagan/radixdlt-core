@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.radixdlt.consensus.HashSigner;
 import com.radixdlt.consensus.Hasher;
-import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.crypto.ECDSASignature;
@@ -49,9 +49,9 @@ public final class NewViewSigner {
 	 * @param highestCommittedQC highest known committed qc
 	 * @return a signed new-view
 	 */
-	public ViewTimeoutSigned signNewView(View nextView, QuorumCertificate highestQC, QuorumCertificate highestCommittedQC) {
-		ViewTimeout timeout = new ViewTimeout(this.self, nextView, highestQC, highestCommittedQC);
+	public ViewTimeoutSigned signNewView(View nextView, SyncInfo syncInfo) {
+		ViewTimeout timeout = new ViewTimeout(this.self, syncInfo.highestQC().getProposed().getLedgerHeader().getEpoch(), nextView);
 		ECDSASignature signature = this.signer.sign(this.hasher.hash(timeout));
-		return new ViewTimeoutSigned(timeout, signature);
+		return new ViewTimeoutSigned(timeout, syncInfo, signature);
 	}
 }

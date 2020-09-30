@@ -45,6 +45,10 @@ public final class ViewTimeoutSigned implements RequiresSyncConsensusEvent {
 	@DsonOutput(Output.ALL)
 	private final ViewTimeout viewTimeout;
 
+	@JsonProperty("sync_info")
+	@DsonOutput(Output.ALL)
+	private final SyncInfo syncInfo;
+
 	@JsonProperty("signature")
 	@DsonOutput(Output.ALL)
 	private final ECDSASignature signature;
@@ -52,43 +56,45 @@ public final class ViewTimeoutSigned implements RequiresSyncConsensusEvent {
 	@JsonCreator
 	public ViewTimeoutSigned(
 		@JsonProperty("view_timeout") ViewTimeout viewTimeout,
+		@JsonProperty("sync_info") SyncInfo syncInfo,
 		@JsonProperty("signature") ECDSASignature signature
 	) {
 		this.viewTimeout = Objects.requireNonNull(viewTimeout);
+		this.syncInfo = Objects.requireNonNull(syncInfo);
 		this.signature = Objects.requireNonNull(signature);
 	}
 
 	@Override
-	public long getEpoch() {
-		return this.viewTimeout.getEpoch();
-	}
-
-	@Override
-	public QuorumCertificate getCommittedQC() {
-		return this.viewTimeout.getCommittedQC();
-	}
-
-	@Override
-	public QuorumCertificate getQC() {
-		return this.viewTimeout.getQC();
-	}
-
-	@Override
 	public BFTNode getAuthor() {
-		return this.viewTimeout.getAuthor();
-	}
-
-	public ViewTimeout viewTimeout() {
-		return this.viewTimeout;
+		return this.viewTimeout.author();
 	}
 
 	@Override
-	public View getView() {
-		return this.viewTimeout.view();
+	public long getEpoch() {
+		return this.viewTimeout.epoch();
 	}
 
 	public View view() {
 		return this.viewTimeout.view();
+	}
+
+	@Override
+	public QuorumCertificate getCommittedQC() {
+		return this.syncInfo.highestCommittedQC();
+	}
+
+	@Override
+	public QuorumCertificate getQC() {
+		return this.syncInfo.highestQC();
+	}
+
+	@Override
+	public View getView() {
+		return this.view();
+	}
+
+	public ViewTimeout viewTimeout() {
+		return this.viewTimeout;
 	}
 
 	public ECDSASignature signature() {
@@ -103,6 +109,7 @@ public final class ViewTimeoutSigned implements RequiresSyncConsensusEvent {
 		if (o instanceof ViewTimeoutSigned) {
 			ViewTimeoutSigned that = (ViewTimeoutSigned) o;
 			return Objects.equals(this.viewTimeout, that.viewTimeout)
+				&& Objects.equals(this.syncInfo, that.syncInfo)
 				&& Objects.equals(this.signature, that.signature);
 		}
 		return false;
@@ -110,12 +117,12 @@ public final class ViewTimeoutSigned implements RequiresSyncConsensusEvent {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.viewTimeout, this.signature);
+		return Objects.hash(this.viewTimeout, this.syncInfo, this.signature);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%s{epoch=%s view=%s author=%s qc=%s}",
-			getClass().getSimpleName(), this.getEpoch(), this.viewTimeout.view(), this.getAuthor(), this.getQC());
+		return String.format("%s{author=%s epoch=%s view=%s qc=%s}",
+			getClass().getSimpleName(), this.getAuthor(), this.getEpoch(), this.view(), this.getQC());
 	}
 }

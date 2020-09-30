@@ -19,8 +19,10 @@ package com.radixdlt.consensus.bft;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.sync.GetVerticesErrorResponse;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,17 +32,22 @@ public class GetVerticesErrorResponseTest {
 	private QuorumCertificate highestCommittedQC;
 	private GetVerticesErrorResponse response;
 	private BFTNode node;
+	private SyncInfo syncInfo;
 
 	@Before
 	public void setUp() {
 		this.highestQC = mock(QuorumCertificate.class);
 		this.highestCommittedQC = mock(QuorumCertificate.class);
 		this.node = mock(BFTNode.class);
-		this.response = new GetVerticesErrorResponse(this.node, this.highestQC, this.highestCommittedQC);
+		this.syncInfo = mock(SyncInfo.class);
+		when(syncInfo.highestQC()).thenReturn(this.highestQC);
+		when(syncInfo.highestCommittedQC()).thenReturn(this.highestCommittedQC);
+		this.response = new GetVerticesErrorResponse(this.node, this.syncInfo);
 	}
 
 	@Test
 	public void testGetters() {
+		assertThat(this.response.syncInfo()).isEqualTo(this.syncInfo);
 		assertThat(this.response.getHighestQC()).isEqualTo(this.highestQC);
 		assertThat(this.response.getHighestCommittedQC()).isEqualTo(this.highestCommittedQC);
 	}

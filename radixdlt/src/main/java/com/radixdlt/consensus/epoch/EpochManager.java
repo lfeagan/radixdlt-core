@@ -234,7 +234,7 @@ public final class EpochManager implements BFTSyncRequestProcessor, BFTUpdatePro
 				epochInfoSender.sendTimeoutProcessed(timeout);
 			}
 		};
-		final Pacemaker pacemaker = pacemakerFactory.create(timeoutSender, infoSender, proposerElection);
+		final Pacemaker pacemaker = pacemakerFactory.create(timeoutSender, infoSender, proposerElection, config.getGenesisQC());
 		final BFTSync bftSync = bftSyncFactory.create(vertexStore, pacemaker);
 
 		this.syncBFTResponseProcessor = bftSync;

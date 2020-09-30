@@ -151,9 +151,20 @@ public final class ConsensusModule extends AbstractModule {
 
 	@Provides
 	@Singleton
-	private Pacemaker pacemaker(ProceedToViewSender proceedToViewSender, PacemakerTimeoutSender timeoutSender, PacemakerInfoSender infoSender) {
+	private Pacemaker pacemaker(
+		ProceedToViewSender proceedToViewSender,
+		PacemakerTimeoutSender timeoutSender,
+		PacemakerInfoSender infoSender,
+		BFTConfiguration configuration
+	) {
 		return new ExponentialTimeoutPacemaker(
-			this.pacemakerTimeout, this.pacemakerRate, this.pacemakerMaxExponent, proceedToViewSender, timeoutSender, infoSender
+			this.pacemakerTimeout,
+			this.pacemakerRate,
+			this.pacemakerMaxExponent,
+			proceedToViewSender,
+			timeoutSender,
+			infoSender,
+			configuration.getGenesisQC()
 		);
 	}
 

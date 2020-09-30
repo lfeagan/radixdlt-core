@@ -22,9 +22,12 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.HashSigner;
 import com.radixdlt.consensus.Hasher;
+import com.radixdlt.consensus.LedgerHeader;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.crypto.ECDSASignature;
 import com.radixdlt.crypto.Hash;
@@ -50,7 +53,17 @@ public class NewViewSignerTest {
 		when(hasher.hash(any())).thenReturn(Hash.ZERO_HASH);
 		when(hashSigner.sign(any(Hash.class))).thenReturn(new ECDSASignature());
 
-		ViewTimeoutSigned newView = newViewSigner.signNewView(view, mock(QuorumCertificate.class), mock(QuorumCertificate.class));
+		LedgerHeader ledgerHeader = mock(LedgerHeader.class);
+		when(ledgerHeader.getEpoch()).thenReturn(1L);
+		BFTHeader proposed = mock(BFTHeader.class);
+		when(proposed.getLedgerHeader()).thenReturn(ledgerHeader);
+		QuorumCertificate highestQC = mock(QuorumCertificate.class);
+		when(highestQC.getProposed()).thenReturn(proposed);
+		SyncInfo syncInfo = mock(SyncInfo.class);
+		when(syncInfo.highestQC()).thenReturn(highestQC);
+		//syncInfo.highestQC().getProposed().getLedgerHeader().getEpoch()
+
+		ViewTimeoutSigned newView = newViewSigner.signNewView(view, syncInfo);
 
 		assertThat(newView.getAuthor()).isEqualTo(self);
 	}

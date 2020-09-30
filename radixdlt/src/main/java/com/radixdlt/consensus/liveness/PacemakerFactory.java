@@ -17,6 +17,7 @@
 
 package com.radixdlt.consensus.liveness;
 
+import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.liveness.ExponentialTimeoutPacemaker.PacemakerInfoSender;
 
 /**
@@ -31,6 +32,7 @@ public interface PacemakerFactory {
 	Pacemaker create(
 		PacemakerTimeoutSender timeoutSender,
 		PacemakerInfoSender infoSender,
-		ProposerElection proposerElection
+		ProposerElection proposerElection,
+		QuorumCertificate genesisQC
 	);
 }

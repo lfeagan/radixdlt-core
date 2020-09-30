@@ -40,7 +40,8 @@ public class VoteTest {
 		this.voteData = new VoteData(BFTHeader.ofGenesisAncestor(mock(LedgerHeader.class)), parent, null);
 		this.timestampedVoteData = new TimestampedVoteData(this.voteData, 123456L);
 		this.author = mock(BFTNode.class);
-		this.testObject = new Vote(author, timestampedVoteData, null);
+		SyncInfo syncInfo = mock(SyncInfo.class);
+		this.testObject = new Vote(author, syncInfo, timestampedVoteData, null);
 	}
 
 	@Test

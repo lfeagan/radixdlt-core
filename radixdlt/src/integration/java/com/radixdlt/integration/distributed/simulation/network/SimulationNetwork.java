@@ -23,9 +23,9 @@ import com.radixdlt.consensus.BFTEventsRx;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
 import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.bft.BFTEventReducer.BFTEventSender;
-import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.SyncEpochsRPCRx;
 import com.radixdlt.consensus.bft.SignedNewViewToLeaderSender.BFTNewViewSender;
+import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.bft.VerifiedVertex;
 import com.radixdlt.consensus.sync.GetVerticesRequest;
 import com.radixdlt.consensus.sync.BFTSync.SyncVerticesRequestSender;
@@ -226,8 +226,8 @@ public class SimulationNetwork {
 		}
 
 		@Override
-		public void sendGetVerticesErrorResponse(BFTNode node, QuorumCertificate highestQC, QuorumCertificate highestCommittedQC) {
-			GetVerticesErrorResponse vertexResponse = new GetVerticesErrorResponse(thisNode, highestQC, highestCommittedQC);
+		public void sendGetVerticesErrorResponse(BFTNode node, SyncInfo syncInfo) {
+			GetVerticesErrorResponse vertexResponse = new GetVerticesErrorResponse(thisNode, syncInfo);
 			receivedMessages.onNext(MessageInTransit.newMessage(vertexResponse, thisNode, node));
 		}
 

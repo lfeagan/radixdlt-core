@@ -180,7 +180,7 @@ public final class BFTEventReducer implements BFTEventProcessor {
 		final BFTHeader header = vertexStore.insertVertex(proposedVertex);
 		final BFTNode currentLeader = this.proposerElection.getProposer(updatedView);
 		try {
-			final Vote vote = safetyRules.voteFor(proposedVertex, header, this.timeSupplier.currentTime());
+			final Vote vote = safetyRules.voteFor(proposedVertex, header, this.timeSupplier.currentTime(), this.vertexStore.syncInfo());
 			log.trace("PROPOSAL: Sending VOTE to {}: {}", currentLeader, vote);
 			sender.sendVote(vote, currentLeader);
 		} catch (SafetyViolationException e) {

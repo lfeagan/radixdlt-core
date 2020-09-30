@@ -20,6 +20,7 @@ package com.radixdlt.consensus.bft;
 import com.radixdlt.consensus.Command;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.Ledger;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.LedgerHeader;
@@ -284,6 +285,14 @@ public final class VertexStore {
 	 */
 	public QuorumCertificate getHighestQC() {
 		return this.highestQC;
+	}
+
+	/**
+	 * Retrieves current {@link SyncInfo}.
+	 * @return current {@link SyncInfo}
+	 */
+	public SyncInfo syncInfo() {
+		return new SyncInfo(this.highestQC, this.highestCommittedQC);
 	}
 
 	/**

@@ -23,6 +23,7 @@ import com.radixdlt.consensus.Hasher;
 import com.radixdlt.consensus.HashSigner;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.TimestampedVoteData;
 import com.radixdlt.consensus.UnverifiedVertex;
 import com.radixdlt.consensus.ViewTimeout;
@@ -92,15 +93,14 @@ public final class SafetyRules {
 	/**
 	 * Create a signed view timeout
 	 * @param nextView the view of the next view
-	 * @param highestQC highest known qc
-	 * @param highestCommittedQC highest known committed qc
+	 * @param syncInfo current {@link SyncInfo}
 	 * @return a signed view timeout
 	 */
-	public ViewTimeoutSigned signViewTimeout(View nextView, QuorumCertificate highestQC, QuorumCertificate highestCommittedQC) {
-		ViewTimeout vt = new ViewTimeout(this.self, nextView, highestQC, highestCommittedQC);
+	public ViewTimeoutSigned signViewTimeout(View nextView, SyncInfo syncInfo) {
+		ViewTimeout vt = new ViewTimeout(this.self, syncInfo.highestQC().getProposed().getLedgerHeader().getEpoch(), nextView);
 		Hash hash = this.hasher.hash(vt);
 		ECDSASignature signature = this.signer.sign(hash);
-		return new ViewTimeoutSigned(vt, signature);
+		return new ViewTimeoutSigned(vt, syncInfo, signature);
 	}
 
 	/**
@@ -112,7 +112,12 @@ public final class SafetyRules {
 	 * @return A vote result containing the vote and any committed vertices
 	 * @throws SafetyViolationException In case the vertex would violate a safety invariant
 	 */
-	public Vote voteFor(VerifiedVertex proposedVertex, BFTHeader proposedHeader, long timestamp) throws SafetyViolationException {
+	public Vote voteFor(
+		VerifiedVertex proposedVertex,
+		BFTHeader proposedHeader,
+		long timestamp,
+		SyncInfo syncInfo
+	) throws SafetyViolationException {
 		// ensure vertex does not violate earlier votes
 		if (proposedVertex.getView().compareTo(this.state.getLastVotedView()) <= 0) {
 			throw new SafetyViolationException(proposedVertex, this.state, String.format(
@@ -138,8 +143,7 @@ public final class SafetyRules {
 
 		this.state = safetyStateBuilder.build();
 
-		// TODO make signing more robust by including author in signed hash
 		ECDSASignature signature = this.signer.sign(voteHash);
-		return new Vote(this.self, timestampedVoteData, signature);
+		return new Vote(this.self, syncInfo, timestampedVoteData, signature);
 	}
 }

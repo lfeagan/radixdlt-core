@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableList;
 import com.radixdlt.consensus.Hasher;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.consensus.UnverifiedVertex;
@@ -122,8 +123,11 @@ public class MessageCentralValidatorSyncTest {
 		when(ecPublicKey.euid()).thenReturn(mock(EUID.class));
 		when(node.getKey()).thenReturn(ecPublicKey);
 		when(addressBook.peer(any(EUID.class))).thenReturn(Optional.of(peer));
+		SyncInfo syncInfo = mock(SyncInfo.class);
+		when(syncInfo.highestQC()).thenReturn(qc);
+		when(syncInfo.highestCommittedQC()).thenReturn(qc);
 
-		sync.sendGetVerticesErrorResponse(node, qc, qc);
+		sync.sendGetVerticesErrorResponse(node, syncInfo);
 
 		verify(messageCentral, times(1)).send(eq(peer), any(GetVerticesErrorResponseMessage.class));
 	}
