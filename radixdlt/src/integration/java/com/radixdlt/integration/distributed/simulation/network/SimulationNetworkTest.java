@@ -42,41 +42,41 @@ public class SimulationNetworkTest {
 	}
 
 	@Test
-	public void when_send_new_view_to_self__then_should_receive_it() {
+	public void when_send_timeout_to_self__then_should_receive_it() {
 		SimulationNetwork network = SimulationNetwork.builder().build();
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node1).bftEvents()
 			.subscribe(testObserver);
-		ViewTimeoutSigned newView = mock(ViewTimeoutSigned.class);
-		network.getNetwork(node1).sendViewTimeout(newView, node1);
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		network.getNetwork(node1).sendViewTimeout(viewTimeout, node1);
 		testObserver.awaitCount(1);
-		testObserver.assertValue(newView);
+		testObserver.assertValue(viewTimeout);
 	}
 
 	@Test
-	public void when_send_new_view_to_self_twice__then_should_receive_both() {
+	public void when_send_timeout_to_self_twice__then_should_receive_both() {
 		SimulationNetwork network = SimulationNetwork.builder().build();
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node1).bftEvents()
 			.subscribe(testObserver);
-		ViewTimeoutSigned newView = mock(ViewTimeoutSigned.class);
-		network.getNetwork(node1).sendViewTimeout(newView, node1);
-		network.getNetwork(node1).sendViewTimeout(newView, node1);
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		network.getNetwork(node1).sendViewTimeout(viewTimeout, node1);
+		network.getNetwork(node1).sendViewTimeout(viewTimeout, node1);
 		testObserver.awaitCount(2);
-		testObserver.assertValues(newView, newView);
+		testObserver.assertValues(viewTimeout, viewTimeout);
 	}
 
 	@Test
-	public void when_self_and_other_send_new_view_to_self__then_should_receive_both() {
+	public void when_self_and_other_send_timeout_to_self__then_should_receive_both() {
 		SimulationNetwork network = SimulationNetwork.builder().build();
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node1).bftEvents()
 			.subscribe(testObserver);
-		ViewTimeoutSigned newView = mock(ViewTimeoutSigned.class);
-		network.getNetwork(node1).sendViewTimeout(newView, node1);
-		network.getNetwork(node2).sendViewTimeout(newView, node1);
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		network.getNetwork(node1).sendViewTimeout(viewTimeout, node1);
+		network.getNetwork(node2).sendViewTimeout(viewTimeout, node1);
 		testObserver.awaitCount(2);
-		testObserver.assertValues(newView, newView);
+		testObserver.assertValues(viewTimeout, viewTimeout);
 	}
 
 	@Test
@@ -104,7 +104,7 @@ public class SimulationNetworkTest {
 	}
 
 	@Test
-	public void when_disabling_messages_and_send_new_view_message_to_other_node__then_should_not_receive_it() {
+	public void when_disabling_messages_and_send_timeout_message_to_other_node__then_should_not_receive_it() {
 		SimulationNetwork network = SimulationNetwork.builder()
 			.latencyProvider(msg -> -1)
 			.build();
@@ -112,8 +112,8 @@ public class SimulationNetworkTest {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node2).bftEvents()
 			.subscribe(testObserver);
-		ViewTimeoutSigned newView = mock(ViewTimeoutSigned.class);
-		network.getNetwork(node1).sendViewTimeout(newView, node1);
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		network.getNetwork(node1).sendViewTimeout(viewTimeout, node1);
 		testObserver.awaitCount(1);
 		testObserver.assertEmpty();
 	}

@@ -90,9 +90,9 @@ public final class ControlledSender implements DeterministicSender {
 	}
 
 	@Override
-	public void sendViewTimeout(ViewTimeoutSigned newView, BFTNode newViewLeader) {
-		int receiver = this.network.lookup(newViewLeader);
-		handleMessage(messageRank(newView), new ControlledMessage(this.senderIndex, receiver, newView));
+	public void sendViewTimeout(ViewTimeoutSigned viewTimeout, BFTNode nextLeader) {
+		int receiver = this.network.lookup(nextLeader);
+		handleMessage(messageRank(viewTimeout), new ControlledMessage(this.senderIndex, receiver, viewTimeout));
 	}
 
 	@Override
@@ -147,8 +147,8 @@ public final class ControlledSender implements DeterministicSender {
 		return MessageRank.of(proof.getEpoch(), proof.getView().number() + 3);
 	}
 
-	private MessageRank messageRank(ViewTimeoutSigned newView) {
-		return MessageRank.of(newView.getEpoch(), newView.view().number());
+	private MessageRank messageRank(ViewTimeoutSigned viewTimeout) {
+		return MessageRank.of(viewTimeout.getEpoch(), viewTimeout.view().number());
 	}
 
 	private MessageRank messageRank(Proposal proposal) {

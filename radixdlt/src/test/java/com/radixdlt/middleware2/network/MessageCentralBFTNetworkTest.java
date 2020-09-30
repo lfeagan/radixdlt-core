@@ -55,7 +55,7 @@ public class MessageCentralBFTNetworkTest {
 	}
 
 	@Test
-	public void when_send_new_view_to_self__then_should_receive_new_view_message() {
+	public void when_send_timeout_to_self__then_should_receive_timeout_message() {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.bftEvents().subscribe(testObserver);
 		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
@@ -85,7 +85,7 @@ public class MessageCentralBFTNetworkTest {
 	}
 
 	@Test
-	public void when_send_new_view__then_message_central_should_be_sent_new_view_message() {
+	public void when_send_timeout__then_message_central_should_be_sent_timeout_message() {
 		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
 		ECPublicKey leaderPk = ECKeyPair.generateNew().getPublicKey();
 		BFTNode leader = mock(BFTNode.class);
@@ -99,7 +99,7 @@ public class MessageCentralBFTNetworkTest {
 	}
 
 	@Test
-	public void when_send_new_view_to_nonexistent__then_no_message_sent() {
+	public void when_send_timeout_to_nonexistent__then_no_message_sent() {
 		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
 		BFTNode node = mock(BFTNode.class);
 		when(node.getKey()).thenReturn(mock(ECPublicKey.class));

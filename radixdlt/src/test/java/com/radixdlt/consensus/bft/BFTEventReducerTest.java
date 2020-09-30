@@ -156,7 +156,7 @@ public class BFTEventReducerTest {
 	}
 
 	@Test
-	public void when_processing_new_view_as_proposer__then_new_view_is_processed_and_proposal_is_sent() {
+	public void when_processing_timeout_as_proposer__then_timeout_is_processed_and_proposal_is_sent() {
 		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
 		when(viewTimeout.getQC()).thenReturn(mock(QuorumCertificate.class));
 		when(viewTimeout.view()).thenReturn(View.of(0L));
@@ -176,7 +176,7 @@ public class BFTEventReducerTest {
 	}
 
 	@Test
-	public void when_processing_valid_stored_proposal__then_atom_is_voted_on_and_new_view() throws SafetyViolationException {
+	public void when_processing_valid_stored_proposal__then_atom_is_voted_on_and_timeout() throws SafetyViolationException {
 		View currentView = View.of(123);
 
 		when(proposerElection.getProposer(any())).thenReturn(mock(BFTNode.class));
@@ -204,7 +204,7 @@ public class BFTEventReducerTest {
 	}
 
 	@Test
-	public void when_processing_valid_stored_proposal_and_next_leader__then_atom_is_voted_on_and_new_view() throws SafetyViolationException {
+	public void when_processing_valid_stored_proposal_and_next_leader__then_atom_is_voted_on_and_timeout() throws SafetyViolationException {
 		View currentView = View.of(123);
 		QuorumCertificate currentQC = mock(QuorumCertificate.class);
 		when(currentQC.getView()).thenReturn(currentView);
@@ -234,7 +234,7 @@ public class BFTEventReducerTest {
 	}
 
 	@Test
-	public void when_processing_valid_stored_proposal_and_leader__then_atom_is_voted_on_and_no_new_view() throws SafetyViolationException {
+	public void when_processing_valid_stored_proposal_and_leader__then_atom_is_voted_on_and_no_timeout() throws SafetyViolationException {
 		View currentView = View.of(123);
 		QuorumCertificate currentQC = mock(QuorumCertificate.class);
 		when(currentQC.getView()).thenReturn(currentView);

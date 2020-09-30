@@ -71,31 +71,31 @@ public final class PendingViewTimeouts {
 
 		ValidationState validationState = this.timeoutState.computeIfAbsent(thisView, k -> validatorSet.newValidationState());
 
-		// check if we have gotten enough new-views to proceed
-		// NewView timestamps here are not required, so we use 0L below
+		// check if we have gotten enough timeouts to proceed
+		// timestamps are not required here, so we use 0L below
 		if (!(validationState.addSignature(node, 0L, signature) && validationState.complete())) {
 			return Optional.empty();
 		}
 
-		// if we have enough new-views, return view
+		// if we have enough timeouts, return view
 		return Optional.of(thisView);
 	}
 
 	private boolean replacePreviousTimeout(BFTNode author, View thisView) {
 		View previousView = this.previousTimeout.put(author, thisView);
 		if (previousView == null) {
-			// No previous NewView for this author, all good here
+			// No previous item for this author, all good here
 			return true;
 		}
 
 		if (thisView.equals(previousView)) {
-			// Just going to ignore this duplicate NewView for now.
+			// Just going to ignore this duplicate for now.
 			// However, we can't count duplicates multiple times.
 			return false;
 		}
 
-		// Prune last pending NewView from pending.
-		// This limits the number of pending new views that are in the pipeline.
+		// Prune last pending item from pending.
+		// This limits the number of pending timeouts that are in the pipeline.
 		ValidationState validationState = this.timeoutState.get(previousView);
 		if (validationState != null) {
 			validationState.removeSignature(author);

@@ -37,7 +37,7 @@ public final class View implements Comparable<View> {
 			throw new IllegalStateException("View Underflow");
 		}
 
-		return new View(view - 1);
+		return of(this.view - 1);
 	}
 
 	public View next() {
@@ -45,7 +45,7 @@ public final class View implements Comparable<View> {
 			throw new IllegalStateException("View Overflow");
 		}
 
-		return new View(view + 1);
+		return of(this.view + 1);
 	}
 
 	public long number() {

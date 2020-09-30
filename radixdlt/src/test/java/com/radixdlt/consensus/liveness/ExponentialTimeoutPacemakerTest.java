@@ -174,22 +174,6 @@ public class ExponentialTimeoutPacemakerTest {
 		assertThat(pacemaker.getCurrentView()).isEqualByComparingTo(View.of(1L));
 	}
 
-//	@Test
-//	public void when_inserting_a_new_view_without_signature__then_exception_is_thrown() {
-//		ViewTimeoutSigned newViewWithoutSignature = mock(ViewTimeoutSigned.class);
-//		QuorumCertificate qc = mock(QuorumCertificate.class);
-//		when(qc.getView()).thenReturn(View.of(1L));
-//		when(newViewWithoutSignature.getQC()).thenReturn(qc);
-//		when(newViewWithoutSignature.getView()).thenReturn(View.of(2L));
-//		when(newViewWithoutSignature.getSignature()).thenReturn(Optional.empty());
-//		when(newViewWithoutSignature.getAuthor()).thenReturn(mock(BFTNode.class));
-//		BFTValidatorSet validatorSet = mock(BFTValidatorSet.class);
-//		when(validatorSet.containsNode(any())).thenReturn(true);
-//
-//		assertThatThrownBy(() -> pacemaker.processNewView(newViewWithoutSignature, validatorSet))
-//			.isInstanceOf(IllegalArgumentException.class);
-//	}
-
 	@Test
 	public void when_inserting_valid_but_unaccepted_new_views__then_no_new_view_is_returned() {
 		View view = View.of(2);

@@ -204,8 +204,8 @@ public class SimulationNetwork {
 		}
 
 		@Override
-		public void sendViewTimeout(ViewTimeoutSigned viewTimeout, BFTNode newViewLeader) {
-			receivedMessages.onNext(MessageInTransit.newMessage(viewTimeout, thisNode, newViewLeader));
+		public void sendViewTimeout(ViewTimeoutSigned viewTimeout, BFTNode nextLeader) {
+			receivedMessages.onNext(MessageInTransit.newMessage(viewTimeout, thisNode, nextLeader));
 		}
 
 		@Override

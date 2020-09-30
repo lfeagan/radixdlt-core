@@ -61,7 +61,7 @@ public class OneSlowNodeTest {
 			processingSequence.add(Pair.of(ChannelId.of(2, curLeader), Vote.class));
 			processingSequence.add(Pair.of(ChannelId.of(3, curLeader), Vote.class));
 		}
-		// Delayed initial NewView from node 0 to (then) leader 1
+		// Delayed initial ViewTimeout from node 0 to (then) leader 1
 		processingSequence.add(Pair.of(ChannelId.of(0, 1), ViewTimeoutSigned.class));
 		// Delayed initial Proposal from (then) leader 1 to node 0
 		processingSequence.add(Pair.of(ChannelId.of(1, 0), Proposal.class));

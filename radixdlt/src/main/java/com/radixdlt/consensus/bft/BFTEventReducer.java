@@ -134,7 +134,7 @@ public final class BFTEventReducer implements BFTEventProcessor {
 
 	@Override
 	public void processViewTimeout(ViewTimeoutSigned viewTimeout) {
-		log.trace("NEW_VIEW: Processing {}", viewTimeout);
+		log.trace("ViewTimeout: Processing {}", viewTimeout);
 		this.pacemaker.processViewTimeout(viewTimeout, validatorSet).ifPresent(view -> {
 			// Hotstuff's Event-Driven OnBeat
 			final QuorumCertificate highestQC = vertexStore.getHighestQC();

@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 public class ConsensusEventMessageTest {
 
 	@Test
-	public void sensibleToStringNewView() {
+	public void sensibleToStringViewTimeoutSigned() {
 		ViewTimeoutSigned m = mock(ViewTimeoutSigned.class);
 		ConsensusEventMessage msg1 = new ConsensusEventMessage(0, m);
 		String s1 = msg1.toString();

@@ -99,9 +99,9 @@ public final class BFTEventVerifier implements BFTEventProcessor {
 	public void processViewTimeout(ViewTimeoutSigned viewTimeout) {
 		validAuthor(viewTimeout).ifPresent(node -> {
 			final ECPublicKey key = node.getKey();
-			final Hash newViewId = this.hasher.hash(viewTimeout.viewTimeout());
+			final Hash timeoutId = this.hasher.hash(viewTimeout.viewTimeout());
 			final ECDSASignature signature = viewTimeout.signature();
-			if (!this.verifier.verify(key, newViewId, signature)) {
+			if (!this.verifier.verify(key, timeoutId, signature)) {
 				log.info("ViewTimeout from author {} in view {} has invalid signature", node, viewTimeout.view());
 			} else {
 				forwardTo.processViewTimeout(viewTimeout);

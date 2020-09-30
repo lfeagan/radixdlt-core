@@ -69,9 +69,9 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 	private final ProceedToViewSender proceedToViewSender;
 	private final PacemakerTimeoutSender timeoutSender;
 	private final PacemakerInfoSender pacemakerInfoSender;
-	private final PendingViewTimeouts pendingNewViews;
+	private final PendingViewTimeouts pendingViewTimeouts;
 
-	private final RateLimiter newViewLogLimiter = RateLimiter.create(1.0);
+	private final RateLimiter logLimiter = RateLimiter.create(1.0);
 
 	private QuorumCertificate qc;
 	private QuorumCertificate highestCommittedQC;
@@ -111,7 +111,7 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 		this.proceedToViewSender = Objects.requireNonNull(proceedToViewSender);
 		this.timeoutSender = Objects.requireNonNull(timeoutSender);
 		this.pacemakerInfoSender = Objects.requireNonNull(pacemakerInfoSender);
-		this.pendingNewViews = new PendingViewTimeouts();
+		this.pendingViewTimeouts = new PendingViewTimeouts();
 		log.debug("{} with max timeout {}*{}^{}ms",
 			getClass().getSimpleName(), this.timeoutMilliseconds, this.rate, this.maxExponent);
 	}
@@ -122,7 +122,7 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 	}
 
 	private void updateView(View nextView) {
-		Level logLevel = this.newViewLogLimiter.tryAcquire() ? Level.INFO : Level.TRACE;
+		Level logLevel = this.logLimiter.tryAcquire() ? Level.INFO : Level.TRACE;
 		long timeout = timeout(uncommittedViews(nextView));
 		log.log(logLevel, "Starting View: {} with timeout {}ms", nextView, timeout);
 		this.currentView = nextView;
@@ -143,29 +143,29 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 	}
 
 	@Override
-	public Optional<View> processViewTimeout(ViewTimeoutSigned newView, BFTValidatorSet validatorSet) {
-		View newViewView = newView.view();
-		if (newViewView.compareTo(this.lastSyncView) <= 0) {
+	public Optional<View> processViewTimeout(ViewTimeoutSigned viewTimeout, BFTValidatorSet validatorSet) {
+		View timeoutView = viewTimeout.view();
+		if (timeoutView.compareTo(this.lastSyncView) <= 0) {
 			// Log happens a lot where f > 0, so setting to trace level
-			log.trace("Ignoring NewView message {}: last sync view is {}", newView, this.lastSyncView);
+			log.trace("Ignoring ViewTimeout message {}: last sync view is {}", viewTimeout, this.lastSyncView);
 			return Optional.empty();
 		}
 
-		// If QC of new-view was from previous view, then we are guaranteed to have the highest QC for this view
+		// If QC of timeout was from previous view, then we are guaranteed to have the highest QC for this view
 		// and can proceed
-		final View qcView = newView.getQC().getView();
+		final View qcView = viewTimeout.getQC().getView();
 		final boolean highestQC = !qcView.isGenesis() && qcView.next().equals(this.currentView);
 
-		if (!this.pendingNewViews.insertViewTimeout(newView, validatorSet).isPresent() && !highestQC) {
-			log.debug("NewView quorum not yet formed (qc {}+1 -> {})", qcView, this.currentView);
+		if (!this.pendingViewTimeouts.insertViewTimeout(viewTimeout, validatorSet).isPresent() && !highestQC) {
+			log.debug("ViewTimeout quorum not yet formed (qc {}+1 -> {})", qcView, this.currentView);
 			return Optional.empty();
 		}
 
-		if (newViewView.equals(this.currentView)) {
+		if (timeoutView.equals(this.currentView)) {
 			this.lastSyncView = this.currentView;
 			return Optional.of(this.currentView);
 		}
-		log.trace("Ignoring NewView quorum for view {}, current is: {}", newViewView, this.currentView);
+		log.trace("Ignoring ViewTimeout quorum for view {}, current is: {}", timeoutView, this.currentView);
 		return Optional.empty();
 	}
 

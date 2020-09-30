@@ -80,7 +80,7 @@ public final class WeightedRotatingLeaders implements ProposerElection {
 			UInt256 lcm256 = UInt256s.cappedLCM(UInt256.from(Long.MAX_VALUE), powerArray);
 			this.lcm = lcm256 == null ? null : lcm256.getLow().getLow();
 
-			this.resetToView(View.of(0));
+			this.resetToView(View.genesis());
 		}
 
 		private BFTValidator computeHeaviest() {

@@ -81,7 +81,7 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 		// to process these events due to much better performance
 		if (event instanceof ViewTimeoutSigned) {
 			final ViewTimeoutSigned newView = (ViewTimeoutSigned) event;
-			return this.processNewViewInternal(newView);
+			return this.processViewTimeoutInternal(newView);
 		}
 
 		if (event instanceof Proposal) {
@@ -102,7 +102,7 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 		// to process these events due to much better performance
 		if (event instanceof ViewTimeoutSigned) {
 			final ViewTimeoutSigned viewTimeout = (ViewTimeoutSigned) event;
-			return this.processNewViewInternal(viewTimeout);
+			return this.processViewTimeoutInternal(viewTimeout);
 		}
 
 		if (event instanceof Proposal) {
@@ -148,13 +148,13 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 		forwardTo.processVote(vote);
 	}
 
-	private boolean processNewViewInternal(ViewTimeoutSigned newView) {
-		log.trace("ViewTimeout: PreProcessing {}", newView);
+	private boolean processViewTimeoutInternal(ViewTimeoutSigned viewTimeout) {
+		log.trace("ViewTimeout: PreProcessing {}", viewTimeout);
 
 		// only do something if we're actually the leader for the view
-		final View view = newView.view();
+		final View view = viewTimeout.view();
 		if (!Objects.equals(proposerElection.getProposer(view), this.self)) {
-			log.warn("ViewTimeout: Got confused new-view {} for view {}", newView, view);
+			log.warn("ViewTimeout: Got confused timeout {} for view {}", viewTimeout, view);
 			return true;
 		}
 
@@ -164,10 +164,10 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 			return true;
 		}
 
-		SyncResult syncResult = this.bftSyncer.syncToQC(newView.getQC(), newView.getCommittedQC(), newView.getAuthor());
+		SyncResult syncResult = this.bftSyncer.syncToQC(viewTimeout.getQC(), viewTimeout.getCommittedQC(), viewTimeout.getAuthor());
 		switch (syncResult) {
 			case SYNCED:
-				forwardTo.processViewTimeout(newView);
+				forwardTo.processViewTimeout(viewTimeout);
 				return true;
 			case INVALID:
 				return true;
@@ -182,7 +182,7 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 	public void processViewTimeout(ViewTimeoutSigned viewTimeout) {
 		log.trace("ViewTimeout: Queueing {}", viewTimeout);
 		if (queues.isEmptyElseAdd(viewTimeout)) {
-			if (!processNewViewInternal(viewTimeout)) {
+			if (!processViewTimeoutInternal(viewTimeout)) {
 				log.debug("ViewTimeout: Queuing {}, waiting for Sync", viewTimeout);
 				queues.add(viewTimeout);
 			}
