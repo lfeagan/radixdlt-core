@@ -25,7 +25,7 @@ import com.radixdlt.consensus.SyncEpochsRPCRx;
 import com.radixdlt.consensus.SyncVerticesRPCRx;
 import com.radixdlt.consensus.bft.BFTEventReducer.BFTEventSender;
 import com.radixdlt.consensus.bft.BFTNode;
-import com.radixdlt.consensus.bft.SignedNewViewToLeaderSender.BFTNewViewSender;
+import com.radixdlt.consensus.bft.SignedViewTimeoutToLeaderSender.BFTViewTimeoutSender;
 import com.radixdlt.consensus.sync.BFTSync.SyncVerticesRequestSender;
 import com.radixdlt.consensus.sync.VertexStoreBFTSyncRequestProcessor.SyncVerticesResponseSender;
 import com.radixdlt.consensus.epoch.EpochManager.SyncEpochsRPCSender;
@@ -46,7 +46,7 @@ public class SimulationNetworkModule extends AbstractModule {
 		bind(SyncEpochsRPCRx.class).to(SimulatedNetworkImpl.class);
 		bind(SyncVerticesRPCRx.class).to(SimulatedNetworkImpl.class);
 		bind(BFTEventSender.class).to(SimulatedNetworkImpl.class);
-		bind(BFTNewViewSender.class).to(SimulatedNetworkImpl.class);
+		bind(BFTViewTimeoutSender.class).to(SimulatedNetworkImpl.class);
 		bind(StateSyncNetwork.class).to(SimulatedNetworkImpl.class);
 		bind(SyncVerticesRequestSender.class).to(SimulatedNetworkImpl.class);
 		bind(SyncEpochsRPCSender.class).to(SimulatedNetworkImpl.class);

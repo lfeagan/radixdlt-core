@@ -26,36 +26,36 @@ import static org.mockito.Mockito.when;
 
 import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.ViewTimeoutSigned;
-import com.radixdlt.consensus.bft.SignedNewViewToLeaderSender.BFTNewViewSender;
+import com.radixdlt.consensus.bft.SignedViewTimeoutToLeaderSender.BFTViewTimeoutSender;
 import com.radixdlt.consensus.liveness.ProposerElection;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SignedNewViewToLeaderSenderTest {
-	private SignedNewViewToLeaderSender sender;
-	private NewViewSigner newViewSigner = mock(NewViewSigner.class);
+public class SignedViewTimeoutToLeaderSenderTest {
+	private SignedViewTimeoutToLeaderSender sender;
+	private ViewTimeoutSigner viewTimeoutSigner = mock(ViewTimeoutSigner.class);
 	private ProposerElection proposerElection = mock(ProposerElection.class);
-	private BFTNewViewSender newViewSender = mock(BFTNewViewSender.class);
+	private BFTViewTimeoutSender timeoutSender = mock(BFTViewTimeoutSender.class);
 
 	@Before
 	public void setup() {
-		this.sender = new SignedNewViewToLeaderSender(
-			newViewSigner,
+		this.sender = new SignedViewTimeoutToLeaderSender(
+			viewTimeoutSigner,
 			proposerElection,
-			newViewSender
+			timeoutSender
 		);
 	}
 
 	@Test
 	public void testSend() {
 		View view = mock(View.class);
-		ViewTimeoutSigned newView = mock(ViewTimeoutSigned.class);
-		when(newViewSigner.signNewView(eq(view), any())).thenReturn(newView);
+		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		when(viewTimeoutSigner.signViewTimeout(eq(view), any())).thenReturn(viewTimeout);
 		BFTNode node = mock(BFTNode.class);
 		when(proposerElection.getProposer(eq(view))).thenReturn(node);
 
 		this.sender.sendProceedToNextView(view, mock(SyncInfo.class));
 
-		verify(newViewSender, times(1)).sendViewTimeout(eq(newView), eq(node));
+		verify(timeoutSender, times(1)).sendViewTimeout(eq(viewTimeout), eq(node));
 	}
 }

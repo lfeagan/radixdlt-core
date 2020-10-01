@@ -31,12 +31,12 @@ import com.radixdlt.consensus.Ledger;
 import com.radixdlt.consensus.LedgerHeader;
 import com.radixdlt.consensus.bft.BFTBuilder;
 import com.radixdlt.consensus.bft.BFTEventReducer.BFTEventSender;
-import com.radixdlt.consensus.bft.SignedNewViewToLeaderSender;
+import com.radixdlt.consensus.bft.SignedViewTimeoutToLeaderSender;
 import com.radixdlt.consensus.liveness.ExponentialTimeoutPacemaker.PacemakerInfoSender;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.consensus.bft.BFTSyncRequestProcessor;
-import com.radixdlt.consensus.bft.NewViewSigner;
-import com.radixdlt.consensus.bft.SignedNewViewToLeaderSender.BFTNewViewSender;
+import com.radixdlt.consensus.bft.ViewTimeoutSigner;
+import com.radixdlt.consensus.bft.SignedViewTimeoutToLeaderSender.BFTViewTimeoutSender;
 import com.radixdlt.consensus.bft.VertexStore.BFTUpdateSender;
 import com.radixdlt.consensus.liveness.ExponentialTimeoutPacemaker;
 import com.radixdlt.consensus.liveness.ExponentialTimeoutPacemaker.ProceedToViewSender;
@@ -138,14 +138,14 @@ public final class ConsensusModule extends AbstractModule {
 
 	@Provides
 	ProceedToViewSender proceedToViewSender(
-		NewViewSigner newViewSigner,
+		ViewTimeoutSigner viewTimeoutSigner,
 		ProposerElection proposerElection,
-		BFTNewViewSender bftNewViewSender
+		BFTViewTimeoutSender bftViewTimeoutSender
 	) {
-		return new SignedNewViewToLeaderSender(
-			newViewSigner,
+		return new SignedViewTimeoutToLeaderSender(
+			viewTimeoutSigner,
 			proposerElection,
-			bftNewViewSender
+			bftViewTimeoutSender
 		);
 	}
 

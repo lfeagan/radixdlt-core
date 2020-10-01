@@ -80,8 +80,8 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 		// Explicitly using switch case method here rather than functional method
 		// to process these events due to much better performance
 		if (event instanceof ViewTimeoutSigned) {
-			final ViewTimeoutSigned newView = (ViewTimeoutSigned) event;
-			return this.processViewTimeoutInternal(newView);
+			final ViewTimeoutSigned viewTimeout = (ViewTimeoutSigned) event;
+			return this.processViewTimeoutInternal(viewTimeout);
 		}
 
 		if (event instanceof Proposal) {

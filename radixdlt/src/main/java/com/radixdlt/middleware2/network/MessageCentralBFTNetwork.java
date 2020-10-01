@@ -18,7 +18,7 @@
 package com.radixdlt.middleware2.network;
 
 import com.radixdlt.consensus.bft.BFTNode;
-import com.radixdlt.consensus.bft.SignedNewViewToLeaderSender.BFTNewViewSender;
+import com.radixdlt.consensus.bft.SignedViewTimeoutToLeaderSender.BFTViewTimeoutSender;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import java.util.Objects;
 
@@ -48,7 +48,7 @@ import io.reactivex.rxjava3.subjects.PublishSubject;
  * BFT Network sending and receiving layer used on top of the MessageCentral
  * layer.
  */
-public final class MessageCentralBFTNetwork implements BFTEventSender, BFTNewViewSender, BFTEventsRx {
+public final class MessageCentralBFTNetwork implements BFTEventSender, BFTViewTimeoutSender, BFTEventsRx {
 	private static final Logger log = LogManager.getLogger();
 
 	private final BFTNode self;

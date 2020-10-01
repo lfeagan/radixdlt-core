@@ -143,7 +143,7 @@ public class BFTEventPreprocessorTest {
 	}
 
 	@Test
-	public void when_process_irrelevant_new_view__event_gets_thrown_away() {
+	public void when_process_irrelevant_view_timeout__event_gets_thrown_away() {
 		ViewTimeoutSigned viewTimeout = createViewTimeout(false, true);
 		when(syncQueues.isEmptyElseAdd(any())).thenReturn(true);
 		preprocessor.processViewTimeout(viewTimeout);
@@ -161,7 +161,7 @@ public class BFTEventPreprocessorTest {
 	}
 
 	@Test
-	public void when_processing_new_view_as_not_proposer__then_new_view_get_thrown_away() {
+	public void when_processing_view_timeout_as_not_proposer__then_event_gets_thrown_away() {
 		ViewTimeoutSigned viewTimeout = createViewTimeout(true, true);
 		when(syncQueues.isEmptyElseAdd(eq(viewTimeout))).thenReturn(true);
 		when(proposerElection.getProposer(View.of(2))).thenReturn(mock(BFTNode.class));
@@ -171,7 +171,7 @@ public class BFTEventPreprocessorTest {
 	}
 
 	@Test
-	public void when_process_new_view_not_synced__then_new_view_is_queued() {
+	public void when_process_view_timeout_not_synced__then_event_is_queued() {
 		ViewTimeoutSigned viewTimeout = createViewTimeout(true, false);
 		when(syncQueues.isEmptyElseAdd(eq(viewTimeout))).thenReturn(true);
 		preprocessor.processViewTimeout(viewTimeout);
@@ -189,7 +189,7 @@ public class BFTEventPreprocessorTest {
 	}
 
 	@Test
-	public void when_process_new_view_synced__then_new_view_is_forwarded() {
+	public void when_process_view_timeout_synced__then_event_is_forwarded() {
 		ViewTimeoutSigned viewTimeout = createViewTimeout(true, true);
 		when(syncQueues.isEmptyElseAdd(eq(viewTimeout))).thenReturn(true);
 		preprocessor.processViewTimeout(viewTimeout);

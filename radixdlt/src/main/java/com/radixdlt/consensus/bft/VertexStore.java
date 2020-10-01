@@ -67,7 +67,6 @@ public final class VertexStore {
 	private Hash rootId;
 	private QuorumCertificate highestQC;
 	private QuorumCertificate highestCommittedQC;
-	private VerifiedLedgerHeaderAndProof ledgerHeaderAndProof;
 
 	public VertexStore(
 		VerifiedVertex rootVertex,

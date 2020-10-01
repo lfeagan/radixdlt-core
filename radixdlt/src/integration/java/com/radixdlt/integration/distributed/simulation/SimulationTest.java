@@ -77,7 +77,7 @@ import com.radixdlt.integration.distributed.simulation.network.DroppingLatencyPr
 import com.radixdlt.integration.distributed.simulation.network.OneNodePerEpochResponseDropper;
 import com.radixdlt.integration.distributed.simulation.network.OneProposalPerViewDropper;
 import com.radixdlt.integration.distributed.simulation.network.RandomLatencyProvider;
-import com.radixdlt.integration.distributed.simulation.network.RandomNewViewDropper;
+import com.radixdlt.integration.distributed.simulation.network.RandomViewTimeoutDropper;
 import com.radixdlt.integration.distributed.simulation.network.SimulationNodes;
 import com.radixdlt.integration.distributed.simulation.network.SimulationNodes.RunningNetwork;
 import com.radixdlt.mempool.LocalMempool;
@@ -127,7 +127,6 @@ public class SimulationTest {
 	private final LatencyProvider latencyProvider;
 	private final ImmutableSet<SimulationNetworkActor> runners;
 	private final ImmutableMap<String, TestInvariant> checks;
-	private final int pacemakerTimeout;
 	private final Module baseNodeModule;
 	private final Module overrideModule;
 	private final Map<ECKeyPair, Module> byzantineNodeModules;
@@ -135,7 +134,6 @@ public class SimulationTest {
 	private SimulationTest(
 		ImmutableList<ECKeyPair> nodes,
 		LatencyProvider latencyProvider,
-		int pacemakerTimeout,
 		Module baseNodeModule,
 		Module overrideModule,
 		Map<ECKeyPair, Module> byzantineNodeModules,
@@ -147,7 +145,6 @@ public class SimulationTest {
 		this.baseNodeModule = baseNodeModule;
 		this.overrideModule = overrideModule;
 		this.byzantineNodeModules = byzantineNodeModules;
-		this.pacemakerTimeout = pacemakerTimeout;
 		this.checks = checks;
 		this.runners = runners;
 	}
@@ -198,8 +195,8 @@ public class SimulationTest {
 			return this;
 		}
 
-		public Builder addRandomNewViewDropper(double drops) {
-			this.latencyProvider.addDropper(new RandomNewViewDropper(new Random(), drops));
+		public Builder addRandomViewTimeoutDropper(double drops) {
+			this.latencyProvider.addDropper(new RandomViewTimeoutDropper(new Random(), drops));
 			return this;
 		}
 
@@ -548,7 +545,6 @@ public class SimulationTest {
 			return new SimulationTest(
 				nodes,
 				latencyProvider.copyOf(),
-				pacemakerTimeout,
 				Modules.combine(modules.build()), overrideModule,
 				byzantineModules.build(),
 				checks,
@@ -650,7 +646,6 @@ public class SimulationTest {
 		SimulationNodes bftNetwork = new SimulationNodes(
 			nodes,
 			network,
-			pacemakerTimeout,
 			baseNodeModule, overrideModule,
 			byzantineNodeModules
 		);

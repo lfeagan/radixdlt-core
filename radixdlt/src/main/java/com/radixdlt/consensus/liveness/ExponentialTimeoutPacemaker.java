@@ -180,10 +180,10 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 	@Override
 	public void processNextView(View view) {
 		// check if a new view can be started
-		View newView = view.next();
-		if (newView.compareTo(currentView) > 0) {
-			// start new view
-			this.updateView(newView);
+		View nextView = view.next();
+		if (nextView.compareTo(currentView) > 0) {
+			// start next view
+			this.updateView(nextView);
 		}
 	}
 

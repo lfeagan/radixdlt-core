@@ -22,9 +22,9 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.radixdlt.consensus.BFTConfiguration;
 import com.radixdlt.consensus.LedgerHeader;
-import com.radixdlt.consensus.bft.NewViewSigner;
-import com.radixdlt.consensus.bft.SignedNewViewToLeaderSender;
-import com.radixdlt.consensus.bft.SignedNewViewToLeaderSender.BFTNewViewSender;
+import com.radixdlt.consensus.bft.ViewTimeoutSigner;
+import com.radixdlt.consensus.bft.SignedViewTimeoutToLeaderSender;
+import com.radixdlt.consensus.bft.SignedViewTimeoutToLeaderSender.BFTViewTimeoutSender;
 import com.radixdlt.consensus.epoch.ProposerElectionFactory;
 import com.radixdlt.consensus.Timeout;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
@@ -117,12 +117,12 @@ public class EpochsConsensusModule extends AbstractModule {
 	}
 
 	@Provides
-	private PacemakerFactory pacemakerFactory(NewViewSigner newViewSigner, BFTNewViewSender bftNewViewSender) {
+	private PacemakerFactory pacemakerFactory(ViewTimeoutSigner viewTimeoutSigner, BFTViewTimeoutSender bftViewTimeoutSender) {
 		return (timeoutSender, infoSender, proposerElection, genesisQC) -> {
-			final ProceedToViewSender proceedToViewSender = new SignedNewViewToLeaderSender(
-				newViewSigner,
+			final ProceedToViewSender proceedToViewSender = new SignedViewTimeoutToLeaderSender(
+				viewTimeoutSigner,
 				proposerElection,
-				bftNewViewSender
+				bftViewTimeoutSender
 			);
 			return new ExponentialTimeoutPacemaker(
 				this.pacemakerTimeout,

@@ -175,7 +175,7 @@ public class ExponentialTimeoutPacemakerTest {
 	}
 
 	@Test
-	public void when_inserting_valid_but_unaccepted_new_views__then_no_new_view_is_returned() {
+	public void when_inserting_valid_but_unaccepted_view_timeouts__then_no_view_is_returned() {
 		View view = View.of(2);
 		ViewTimeoutSigned viewTimeout1 = makeViewTimeoutFor(view);
 		ViewTimeoutSigned viewTimeout2 = makeViewTimeoutFor(view);
@@ -186,7 +186,7 @@ public class ExponentialTimeoutPacemakerTest {
 	}
 
 	@Test
-	public void when_inserting_valid_but_old_new_views__then_no_new_view_is_returned() {
+	public void when_inserting_valid_but_old_view_timeouts__then_no_view_is_returned() {
 		View view = View.of(0);
 		ViewTimeoutSigned viewTimeout = makeViewTimeoutFor(view);
 		BFTValidatorSet validatorSet = mock(BFTValidatorSet.class);
@@ -195,7 +195,7 @@ public class ExponentialTimeoutPacemakerTest {
 	}
 
 	@Test
-	public void when_inserting_current_and_accepted_new_views__then_qc_is_formed_and_current_view_has_changed() {
+	public void when_inserting_current_and_accepted_view_timeouts__then_qc_is_formed_and_current_view_has_changed() {
 		View view = View.of(1);
 		ViewTimeoutSigned viewTimeout = makeViewTimeoutFor(view);
 		BFTValidatorSet validatorSet = mock(BFTValidatorSet.class);
@@ -211,7 +211,7 @@ public class ExponentialTimeoutPacemakerTest {
 	}
 
 	@Test
-	public void when_inserting_new_view_with_qc_from_previous_view__then_new_synced_view_is_returned() {
+	public void when_inserting_view_timeout_with_qc_from_previous_view__then_new_synced_view_is_returned() {
 		View view = View.of(2);
 		BFTNode node = mock(BFTNode.class);
 
@@ -251,7 +251,7 @@ public class ExponentialTimeoutPacemakerTest {
 		this.pacemaker.processNextView(View.genesis());
 		verify(this.timeoutSender, times(1)).scheduleTimeout(eq(View.of(1)), eq(this.timeout));
 
-		// Process new view message
+		// Process view timeout message
 		assertThat(this.pacemaker.processViewTimeout(viewTimeout, validatorSet)).isEmpty();
 		assertThat(this.pacemaker.getCurrentView()).isEqualTo(View.of(1));
 		verifyNoMoreInteractions(this.timeoutSender);

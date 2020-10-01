@@ -37,7 +37,7 @@ import com.radixdlt.consensus.Hasher;
 import com.radixdlt.consensus.Ledger;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
 import com.radixdlt.consensus.bft.BFTEventReducer.BFTEventSender;
-import com.radixdlt.consensus.bft.SignedNewViewToLeaderSender.BFTNewViewSender;
+import com.radixdlt.consensus.bft.SignedViewTimeoutToLeaderSender.BFTViewTimeoutSender;
 import com.radixdlt.consensus.liveness.ExponentialTimeoutPacemaker.PacemakerInfoSender;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.consensus.bft.VertexStore.BFTUpdateSender;
@@ -71,7 +71,7 @@ public class EpochsConsensusModuleTest {
 				bind(Ledger.class).toInstance(mock(Ledger.class));
 				bind(SyncLedgerRequestSender.class).toInstance(mock(SyncLedgerRequestSender.class));
 				bind(BFTEventSender.class).toInstance(mock(BFTEventSender.class));
-				bind(BFTNewViewSender.class).toInstance(mock(BFTNewViewSender.class));
+				bind(BFTViewTimeoutSender.class).toInstance(mock(BFTViewTimeoutSender.class));
 				bind(SyncVerticesRequestSender.class).toInstance(mock(SyncVerticesRequestSender.class));
 				bind(SyncVerticesResponseSender.class).toInstance(mock(SyncVerticesResponseSender.class));
 				bind(VertexStoreEventSender.class).toInstance(mock(VertexStoreEventSender.class));

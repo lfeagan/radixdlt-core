@@ -35,19 +35,19 @@ import com.radixdlt.crypto.Hash;
 import org.junit.Before;
 import org.junit.Test;
 
-public class NewViewSignerTest {
-	private NewViewSigner newViewSigner;
+public class ViewTimeoutSignerTest {
+	private ViewTimeoutSigner viewTimeoutSigner;
 	private BFTNode self = mock(BFTNode.class);
 	private Hasher hasher = mock(Hasher.class);
 	private HashSigner hashSigner = mock(HashSigner.class);
 
 	@Before
 	public void setup() {
-		newViewSigner = new NewViewSigner(self, hasher, hashSigner);
+		viewTimeoutSigner = new ViewTimeoutSigner(self, hasher, hashSigner);
 	}
 
 	@Test
-	public void when_create_new_view__then_should_be_correct() {
+	public void when_create_view_timeout__then_should_be_correct() {
 		View view = mock(View.class);
 		when(view.number()).thenReturn(1L);
 		when(hasher.hash(any())).thenReturn(Hash.ZERO_HASH);
@@ -63,8 +63,8 @@ public class NewViewSignerTest {
 		when(syncInfo.highestQC()).thenReturn(highestQC);
 		//syncInfo.highestQC().getProposed().getLedgerHeader().getEpoch()
 
-		ViewTimeoutSigned newView = newViewSigner.signNewView(view, syncInfo);
+		ViewTimeoutSigned viewTimeout = viewTimeoutSigner.signViewTimeout(view, syncInfo);
 
-		assertThat(newView.getAuthor()).isEqualTo(self);
+		assertThat(viewTimeout.getAuthor()).isEqualTo(self);
 	}
 }

@@ -26,39 +26,39 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Sends a signed new view message to the leader of the view
+ * Sends a signed view timeout message to the leader of the view
  */
-public final class SignedNewViewToLeaderSender implements ProceedToViewSender {
+public final class SignedViewTimeoutToLeaderSender implements ProceedToViewSender {
 	private static final Logger log = LogManager.getLogger();
 
-	public interface BFTNewViewSender {
+	public interface BFTViewTimeoutSender {
 		/**
-		 * Send a new-view message to a given validator
-		 * @param newView the new-view message
+		 * Send a view timeotu message to a given validator
+		 * @param viewTimeout the view timeout message
 		 * @param nextLeader the validator the message gets sent to
 		 */
-		void sendViewTimeout(ViewTimeoutSigned newView, BFTNode nextLeader);
+		void sendViewTimeout(ViewTimeoutSigned viewTimeout, BFTNode nextLeader);
 	}
 
-	private final NewViewSigner newViewSigner;
+	private final ViewTimeoutSigner viewTimeoutSigner;
 	private final ProposerElection proposerElection;
-	private final BFTNewViewSender sender;
+	private final BFTViewTimeoutSender sender;
 
-	public SignedNewViewToLeaderSender(
-		NewViewSigner newViewSigner,
+	public SignedViewTimeoutToLeaderSender(
+		ViewTimeoutSigner viewTimeoutSigner,
 		ProposerElection proposerElection,
-		BFTNewViewSender sender
+		BFTViewTimeoutSender sender
 	) {
-		this.newViewSigner = Objects.requireNonNull(newViewSigner);
+		this.viewTimeoutSigner = Objects.requireNonNull(viewTimeoutSigner);
 		this.proposerElection = Objects.requireNonNull(proposerElection);
 		this.sender = Objects.requireNonNull(sender);
 	}
 
 	@Override
 	public void sendProceedToNextView(View nextView, SyncInfo syncInfo) {
-		ViewTimeoutSigned newView = newViewSigner.signNewView(nextView, syncInfo);
+		ViewTimeoutSigned viewTimeout = viewTimeoutSigner.signViewTimeout(nextView, syncInfo);
 		BFTNode nextLeader = this.proposerElection.getProposer(nextView);
-		log.trace("Sending NEW_VIEW to {}: {}", nextLeader, newView);
-		this.sender.sendViewTimeout(newView, nextLeader);
+		log.trace("Sending ViewTimeout to {}: {}", nextLeader, viewTimeout);
+		this.sender.sendViewTimeout(viewTimeout, nextLeader);
 	}
 }

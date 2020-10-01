@@ -24,13 +24,13 @@ import java.util.Random;
 import java.util.function.Predicate;
 
 /**
- * Drops random new view messages
+ * Drops random view timeout messages
  */
-public class RandomNewViewDropper implements Predicate<MessageInTransit> {
+public class RandomViewTimeoutDropper implements Predicate<MessageInTransit> {
 	private final Random random;
 	private final double drops;
 
-	public RandomNewViewDropper(Random random, double drops) {
+	public RandomViewTimeoutDropper(Random random, double drops) {
 		this.random = Objects.requireNonNull(random);
 		this.drops = drops;
 	}

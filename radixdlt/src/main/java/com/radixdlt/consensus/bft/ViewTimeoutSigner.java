@@ -28,28 +28,27 @@ import com.radixdlt.crypto.ECDSASignature;
 import java.util.Objects;
 
 /**
- * Creates and signs a new-view message
+ * Creates and signs a view timeout message
  */
-public final class NewViewSigner {
+public final class ViewTimeoutSigner {
 	private final HashSigner signer;
 	private final Hasher hasher;
 	private final BFTNode self;
 
 	@Inject
-	public NewViewSigner(@Named("self") BFTNode self, Hasher hasher, HashSigner signer) {
+	public ViewTimeoutSigner(@Named("self") BFTNode self, Hasher hasher, HashSigner signer) {
 		this.self = Objects.requireNonNull(self);
 		this.hasher = Objects.requireNonNull(hasher);
 		this.signer = Objects.requireNonNull(signer);
 	}
 
 	/**
-	 * Create a signed new-view
-	 * @param nextView the view of the new-view
-	 * @param highestQC highest known qc
-	 * @param highestCommittedQC highest known committed qc
-	 * @return a signed new-view
+	 * Create a signed view timeout
+	 * @param nextView the view of the view timeout
+	 * @param syncInfo {@link SyncInfo} for highest QC's
+	 * @return a signed view timeout
 	 */
-	public ViewTimeoutSigned signNewView(View nextView, SyncInfo syncInfo) {
+	public ViewTimeoutSigned signViewTimeout(View nextView, SyncInfo syncInfo) {
 		ViewTimeout timeout = new ViewTimeout(this.self, syncInfo.highestQC().getProposed().getLedgerHeader().getEpoch(), nextView);
 		ECDSASignature signature = this.signer.sign(this.hasher.hash(timeout));
 		return new ViewTimeoutSigned(timeout, syncInfo, signature);

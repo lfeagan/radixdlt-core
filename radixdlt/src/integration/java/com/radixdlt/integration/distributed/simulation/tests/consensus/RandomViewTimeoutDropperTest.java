@@ -32,10 +32,10 @@ import org.junit.Test;
  * Dropping random new-views should cause consensus to fork quite a bit.
  * This is to test that safety should always be preserved even in multiple forking situations.
  */
-public class RandomNewViewDropperTest {
+public class RandomViewTimeoutDropperTest {
 	private final Builder bftTestBuilder = SimulationTest.builder()
 		.numNodes(4)
-		.addRandomNewViewDropper(0.4)
+		.addRandomViewTimeoutDropper(0.4)
 		.checkConsensusSafety("safety")
 		.checkConsensusLiveness("liveness", 20, TimeUnit.SECONDS);
 
