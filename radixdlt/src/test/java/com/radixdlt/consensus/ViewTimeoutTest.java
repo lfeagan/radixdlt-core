@@ -37,7 +37,7 @@ public class ViewTimeoutTest {
 		this.view = View.of(1L);
 		this.epoch = 1;
 		this.author = mock(BFTNode.class);
-		this.testObject = new ViewTimeout(author, epoch, view);
+		this.testObject = ViewTimeout.from(author, epoch, view);
 	}
 
 	@Test

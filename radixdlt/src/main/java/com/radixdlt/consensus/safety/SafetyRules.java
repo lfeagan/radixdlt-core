@@ -18,7 +18,6 @@
 package com.radixdlt.consensus.safety;
 
 import com.radixdlt.consensus.bft.VerifiedVertex;
-import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.Hasher;
 import com.radixdlt.consensus.HashSigner;
 import com.radixdlt.consensus.Proposal;
@@ -26,8 +25,6 @@ import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.TimestampedVoteData;
 import com.radixdlt.consensus.UnverifiedVertex;
-import com.radixdlt.consensus.ViewTimeout;
-import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.consensus.VoteData;
@@ -88,19 +85,6 @@ public final class SafetyRules {
 		}
 
 		return new VoteData(proposedHeader, parent, toCommit);
-	}
-
-	/**
-	 * Create a signed view timeout
-	 * @param nextView the view of the next view
-	 * @param syncInfo current {@link SyncInfo}
-	 * @return a signed view timeout
-	 */
-	public ViewTimeoutSigned signViewTimeout(View nextView, SyncInfo syncInfo) {
-		ViewTimeout vt = new ViewTimeout(this.self, syncInfo.highestQC().getProposed().getLedgerHeader().getEpoch(), nextView);
-		Hash hash = this.hasher.hash(vt);
-		ECDSASignature signature = this.signer.sign(hash);
-		return new ViewTimeoutSigned(vt, syncInfo, signature);
 	}
 
 	/**

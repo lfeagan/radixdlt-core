@@ -50,15 +50,6 @@ public final class ViewTimeout {
 
 	private final View view;
 
-	@JsonCreator
-	ViewTimeout(
-		@JsonProperty("author") byte[] author,
-		@JsonProperty("epoch") long epoch,
-		@JsonProperty("view") long view
-	) throws PublicKeyException {
-		this(BFTNode.create(ECPublicKey.fromBytes(author)), epoch, View.of(view));
-	}
-
 	/**
 	 * Signals to the receiver that a view timeout has occurred for the author.
 	 *
@@ -66,7 +57,20 @@ public final class ViewTimeout {
 	 * @param epoch The epoch for the view that timed out
 	 * @param view The view that timed out
 	 */
-	public ViewTimeout(BFTNode author, long epoch, View view) {
+	public static ViewTimeout from(BFTNode author, long epoch, View view) {
+		return new ViewTimeout(author, epoch, view);
+	}
+
+	@JsonCreator
+	private ViewTimeout(
+		@JsonProperty("author") byte[] author,
+		@JsonProperty("epoch") long epoch,
+		@JsonProperty("view") long view
+	) throws PublicKeyException {
+		this(BFTNode.create(ECPublicKey.fromBytes(author)), epoch, View.of(view));
+	}
+
+	private ViewTimeout(BFTNode author, long epoch, View view) {
 		this.author = Objects.requireNonNull(author);
 		this.epoch = epoch;
 		this.view = Objects.requireNonNull(view);

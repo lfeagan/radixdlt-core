@@ -49,8 +49,8 @@ public final class ViewTimeoutSigner {
 	 * @return a signed view timeout
 	 */
 	public ViewTimeoutSigned signViewTimeout(View nextView, SyncInfo syncInfo) {
-		ViewTimeout timeout = new ViewTimeout(this.self, syncInfo.highestQC().getProposed().getLedgerHeader().getEpoch(), nextView);
+		ViewTimeout timeout = ViewTimeout.from(this.self, syncInfo.highestQC().getProposed().getLedgerHeader().getEpoch(), nextView);
 		ECDSASignature signature = this.signer.sign(this.hasher.hash(timeout));
-		return new ViewTimeoutSigned(timeout, syncInfo, signature);
+		return ViewTimeoutSigned.from(timeout, syncInfo, signature);
 	}
 }

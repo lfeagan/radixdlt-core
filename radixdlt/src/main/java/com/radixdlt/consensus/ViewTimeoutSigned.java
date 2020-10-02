@@ -53,8 +53,12 @@ public final class ViewTimeoutSigned implements RequiresSyncConsensusEvent {
 	@DsonOutput(Output.ALL)
 	private final ECDSASignature signature;
 
+	public static ViewTimeoutSigned from(ViewTimeout viewTimeout, SyncInfo syncInfo, ECDSASignature signature) {
+		return new ViewTimeoutSigned(viewTimeout, syncInfo, signature);
+	}
+
 	@JsonCreator
-	public ViewTimeoutSigned(
+	private ViewTimeoutSigned(
 		@JsonProperty("view_timeout") ViewTimeout viewTimeout,
 		@JsonProperty("sync_info") SyncInfo syncInfo,
 		@JsonProperty("signature") ECDSASignature signature
