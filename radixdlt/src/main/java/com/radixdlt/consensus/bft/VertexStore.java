@@ -58,14 +58,13 @@ public final class VertexStore {
 	private final BFTUpdateSender bftUpdateSender;
 	private final Ledger ledger;
 	private final SystemCounters counters;
-	private final Map<Hash, VerifiedVertex> vertices = new HashMap<>();
+	private final Map<Hash, PreparedVertex> vertices = new HashMap<>();
 	private final Map<Hash, Integer> vertexNumChildren = new HashMap<>();
 
 	// These should never be null
-	private Hash rootId;
+	private VerifiedVertex root;
 	private QuorumCertificate highestQC;
 	private QuorumCertificate highestCommittedQC;
-	private VerifiedLedgerHeaderAndProof ledgerHeaderAndProof;
 
 	public VertexStore(
 		VerifiedVertex rootVertex,
@@ -108,7 +107,7 @@ public final class VertexStore {
 	}
 
 	public VerifiedVertex getRoot() {
-		return this.vertices.get(this.rootId);
+		return root;
 	}
 
 	public void rebuild(VerifiedVertex rootVertex, QuorumCertificate rootQC, QuorumCertificate rootCommitQC, List<VerifiedVertex> vertices) {
@@ -127,11 +126,10 @@ public final class VertexStore {
 
 		this.vertices.clear();
 		this.vertexNumChildren.clear();
-		this.rootId = rootVertex.getId();
+		this.root = rootVertex;
 		this.highestQC = rootQC;
 		this.vertexStoreEventSender.highQC(rootQC);
 		this.highestCommittedQC = rootCommitQC;
-		this.vertices.put(rootVertex.getId(), rootVertex);
 
 		for (VerifiedVertex vertex : vertices) {
 			if (!addQC(vertex.getQC())) {
@@ -144,11 +142,12 @@ public final class VertexStore {
 
 
 	public boolean containsVertex(Hash vertexId) {
-		return vertices.containsKey(vertexId);
+		return vertices.containsKey(vertexId) || root.getId().equals(vertexId);
 	}
 
 	public boolean addQC(QuorumCertificate qc) {
-		if (!vertices.containsKey(qc.getProposed().getVertexId())) {
+		final Hash id = qc.getProposed().getVertexId();
+		if (!this.containsVertex(id)) {
 			return false;
 		}
 
@@ -187,33 +186,34 @@ public final class VertexStore {
 	 * @return a bft header if creation of next header is successful.
 	 */
 	public Optional<BFTHeader> insertVertex(VerifiedVertex vertex) {
-		if (!vertices.containsKey(vertex.getParentId())) {
+		if (!this.containsVertex(vertex.getParentId())) {
 			throw new MissingParentException(vertex.getParentId());
 		}
 
-		if (!vertex.hasDirectParent()) {
-			counters.increment(CounterType.BFT_INDIRECT_PARENT);
-		}
+		LinkedList<PreparedVertex> previous = getPathFromRoot(vertex.getParentId());
+		Optional<PreparedVertex> executedVertexMaybe = ledger.prepare(previous, vertex);
+		executedVertexMaybe.ifPresent(executedVertex -> {
+			// TODO: Don't check for state computer errors for now so that we don't
+			// TODO: have to deal with failing leader proposals
+			// TODO: Reinstate this when ProposalGenerator + Mempool can guarantee correct proposals
+			// TODO: (also see commitVertex->storeAtom)
+			if (!vertices.containsKey(vertex.getId())) {
+				vertices.put(vertex.getId(), executedVertex);
+				int numChildren = vertexNumChildren.merge(vertex.getParentId(), 1, Integer::sum);
+				if (numChildren > 1) {
+					this.counters.increment(CounterType.BFT_VERTEX_STORE_FORKS);
+				}
+				if (!vertex.hasDirectParent()) {
+					this.counters.increment(CounterType.BFT_INDIRECT_PARENT);
+				}
+				updateVertexStoreSize();
 
-		// TODO: Don't check for state computer errors for now so that we don't
-		// TODO: have to deal with failing leader proposals
-		// TODO: Reinstate this when ProposalGenerator + Mempool can guarantee correct proposals
-		// TODO: (also see commitVertex->storeAtom)
-		if (!vertices.containsKey(vertex.getId())) {
-			vertices.put(vertex.getId(), vertex);
-			int numChildren = vertexNumChildren.merge(vertex.getParentId(), 1, Integer::sum);
-			if (numChildren > 1) {
-				this.counters.increment(CounterType.BFT_VERTEX_STORE_FORKS);
+				final BFTUpdate update = new BFTUpdate(vertex);
+				bftUpdateSender.sendBFTUpdate(update);
 			}
+		});
 
-			updateVertexStoreSize();
-
-			final BFTUpdate update = new BFTUpdate(vertex);
-			bftUpdateSender.sendBFTUpdate(update);
-		}
-
-		LinkedList<VerifiedVertex> previous = getPathFromRoot(vertex.getParentId());
-		return ledger.prepare(previous, vertex)
+		return executedVertexMaybe
 			.map(executedVertex -> new BFTHeader(vertex.getView(), vertex.getId(), executedVertex.getLedgerHeader()));
 	}
 
@@ -230,21 +230,21 @@ public final class VertexStore {
 		}
 
 		final Hash vertexId = header.getVertexId();
-		final VerifiedVertex tipVertex = vertices.get(vertexId);
+		final PreparedVertex tipVertex = vertices.get(vertexId);
 		if (tipVertex == null) {
 			throw new IllegalStateException("Committing vertex not in store: " + header);
 		}
 
-		final ImmutableList<VerifiedVertex> path = ImmutableList.copyOf(getPathFromRoot(tipVertex.getId()));
+		final ImmutableList<PreparedVertex> path = ImmutableList.copyOf(getPathFromRoot(tipVertex.getId()));
 
 		// TODO: Must prune all other children of root
 		path.forEach(v -> {
-			vertices.remove(v.getParentId());
+			vertices.remove(v.getId());
 			vertexNumChildren.remove(v.getParentId());
 		});
 
 		final ImmutableList<Command> commands = path.stream()
-			.map(VerifiedVertex::getCommand)
+			.flatMap(PreparedVertex::getSuccessfulCommands)
 			.filter(Objects::nonNull)
 			.collect(ImmutableList.toImmutableList());
 
@@ -255,16 +255,16 @@ public final class VertexStore {
 		VerifiedCommandsAndProof verifiedCommandsAndProof = new VerifiedCommandsAndProof(commands, proof);
 		this.ledger.commit(verifiedCommandsAndProof);
 
-		rootId = header.getVertexId();
+		root = tipVertex.getVertex();
 
 		updateVertexStoreSize();
 	}
 
-	public LinkedList<VerifiedVertex> getPathFromRoot(Hash vertexId) {
-		final LinkedList<VerifiedVertex> path = new LinkedList<>();
+	public LinkedList<PreparedVertex> getPathFromRoot(Hash vertexId) {
+		final LinkedList<PreparedVertex> path = new LinkedList<>();
 
-		VerifiedVertex vertex = vertices.get(vertexId);
-		while (vertex != null && !vertex.getId().equals(rootId)) {
+		PreparedVertex vertex = vertices.get(vertexId);
+		while (vertex != null) {
 			path.addFirst(vertex);
 			vertex = vertices.get(vertex.getParentId());
 		}
@@ -305,13 +305,18 @@ public final class VertexStore {
 		Hash nextId = vertexId;
 		ImmutableList.Builder<VerifiedVertex> builder = ImmutableList.builderWithExpectedSize(count);
 		for (int i = 0; i < count; i++) {
-			VerifiedVertex vertex = this.vertices.get(nextId);
-			if (vertex == null) {
+			PreparedVertex preparedVertex = this.vertices.get(nextId);
+			final VerifiedVertex verifiedVertex;
+			if (preparedVertex != null) {
+				verifiedVertex = preparedVertex.getVertex();
+			} else if (nextId.equals(root.getId())) {
+				verifiedVertex = root;
+			} else {
 				return Optional.empty();
 			}
 
-			builder.add(vertex);
-			nextId = vertex.getParentId();
+			builder.add(verifiedVertex);
+			nextId = verifiedVertex.getParentId();
 		}
 
 		return Optional.of(builder.build());

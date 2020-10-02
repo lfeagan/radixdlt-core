@@ -75,7 +75,7 @@ public class SafetyInvariant implements TestInvariant {
 			)
 			.flatMap(nodeAndVertex -> {
 				final BFTNode node = nodeAndVertex.getFirst();
-				final VerifiedVertex vertex = nodeAndVertex.getSecond();
+				final VerifiedVertex vertex = nodeAndVertex.getSecond().getVertex();
 				final EpochView epochView = EpochView.of(
 					vertex.getParentHeader().getLedgerHeader().getEpoch(),
 					vertex.getView()

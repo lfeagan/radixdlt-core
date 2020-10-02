@@ -17,6 +17,7 @@
 
 package com.radixdlt.integration.distributed.simulation.invariants.ledger;
 
+import com.radixdlt.consensus.bft.PreparedVertex.CommandStatus;
 import com.radixdlt.integration.distributed.simulation.TestInvariant;
 import com.radixdlt.integration.distributed.simulation.network.SimulationNodes.RunningNetwork;
 import com.radixdlt.utils.Pair;
@@ -34,10 +35,11 @@ public class ConsensusToLedgerCommittedInvariant implements TestInvariant {
 		return network.bftCommittedUpdates()
 			.map(Pair::getSecond)
 			.concatMap(committedUpdate -> Observable.fromStream(committedUpdate.getCommitted().stream()))
-			.filter(v -> v.getCommand() != null)
-			.flatMapMaybe(v -> network
+			.filter(v -> v.getCommandStatus() == CommandStatus.SUCCESS)
+			.flatMapMaybe(v -> network // TODO: this is unreliable in picking up all ledger updates
 				.ledgerUpdates()
-				.filter(nodeAndCmd -> nodeAndCmd.getSecond().getNewCommands().contains(v.getCommand()))
+				.filter(nodeAndUpdate -> v.getSuccessfulCommands()
+						.allMatch(cmd -> nodeAndUpdate.getSecond().getNewCommands().contains(cmd)))
 				.timeout(10, TimeUnit.SECONDS)
 				.firstOrError()
 				.ignoreElement()

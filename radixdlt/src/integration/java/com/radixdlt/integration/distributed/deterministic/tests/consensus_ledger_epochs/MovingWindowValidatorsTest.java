@@ -54,9 +54,10 @@ public class MovingWindowValidatorsTest {
 		assertThat(testCounters).extracting(sc -> sc.get(CounterType.BFT_TIMEOUT)).containsOnly(0L);
 
 		long maxCount = maxProcessedFor(numNodes, windowSize, maxEpoch, highView.number());
+
 		assertThat(testCounters)
 			.extracting(sc -> sc.get(CounterType.BFT_PROCESSED))
-			.allMatch(between(maxCount - 3, maxCount));
+			.allMatch(between(maxCount - 3, maxCount), "Is close to: " + maxCount);
 	}
 
 	@Test

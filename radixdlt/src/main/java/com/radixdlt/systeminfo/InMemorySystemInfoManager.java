@@ -20,6 +20,7 @@ package com.radixdlt.systeminfo;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
+import com.radixdlt.consensus.bft.PreparedVertex;
 import com.radixdlt.consensus.bft.VerifiedVertex;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.Timeout;
@@ -84,6 +85,7 @@ public final class InMemorySystemInfoManager {
 				.observeOn(Schedulers.io())
 				.concatMap(committed -> Observable.fromStream(committed.getCommitted().stream()))
 				.filter(v -> (v.getView().number() % vertexUpdateFrequency) == 0)
+				.map(PreparedVertex::getVertex)
 				.subscribe(vertexRingBuffer::add);
 		}
 	}

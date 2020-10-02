@@ -21,11 +21,7 @@ import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-import com.google.common.collect.ImmutableList;
 import com.radixdlt.consensus.QuorumCertificate;
-import com.radixdlt.consensus.bft.BFTCommittedUpdate;
-import com.radixdlt.consensus.bft.VerifiedVertex;
-import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.epoch.EpochView;
 import com.radixdlt.systeminfo.InMemorySystemInfoManager;
 import com.radixdlt.systeminfo.InfoRx;
@@ -71,21 +67,5 @@ public class InMemorySystemInfoManagerTest {
 		when(infoRx.highQCs()).thenReturn(Observable.just(qc));
 		runner.start();
 		await().atMost(1, TimeUnit.SECONDS).until(() -> runner.getHighestQC().equals(qc));
-	}
-
-	@Test
-	public void when_send_three_committed_vertices_and_get_committed__then_returns_last_committed() {
-		VerifiedVertex vertex0 = mock(VerifiedVertex.class);
-		when(vertex0.getView()).thenReturn(View.of(0));
-		VerifiedVertex vertex1 = mock(VerifiedVertex.class);
-		when(vertex1.getView()).thenReturn(View.of(1));
-		VerifiedVertex vertex2 = mock(VerifiedVertex.class);
-		when(vertex2.getView()).thenReturn(View.of(2));
-		BFTCommittedUpdate update = mock(BFTCommittedUpdate.class);
-		when(update.getCommitted()).thenReturn(ImmutableList.of(vertex0, vertex1, vertex2));
-		when(infoRx.bftCommittedUpdates()).thenReturn(Observable.just(update));
-		runner.start();
-		await().atMost(1, TimeUnit.SECONDS).until(() -> runner.getCommittedVertices().size() == 1
-			&& runner.getCommittedVertices().get(0).equals(vertex2));
 	}
 }

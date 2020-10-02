@@ -17,10 +17,13 @@
 
 package com.radixdlt.consensus.bft;
 
+import com.radixdlt.consensus.Command;
 import com.radixdlt.consensus.LedgerHeader;
+import com.radixdlt.crypto.Hash;
 import java.util.Objects;
+import java.util.stream.Stream;
 
-public final class ExecutedVertex {
+public final class PreparedVertex {
 	public enum CommandStatus {
 		SUCCESS, IGNORED, FAILED
 	}
@@ -31,10 +34,22 @@ public final class ExecutedVertex {
 
 	private final CommandStatus commandStatus;
 
-	ExecutedVertex(VerifiedVertex vertex, LedgerHeader ledgerHeader, CommandStatus commandStatus) {
+	PreparedVertex(VerifiedVertex vertex, LedgerHeader ledgerHeader, CommandStatus commandStatus) {
 		this.vertex = Objects.requireNonNull(vertex);
 		this.ledgerHeader = Objects.requireNonNull(ledgerHeader);
 		this.commandStatus = commandStatus;
+	}
+
+	public Hash getId() {
+		return vertex.getId();
+	}
+
+	public Hash getParentId() {
+		return vertex.getParentId();
+	}
+
+	public View getView() {
+		return vertex.getView();
 	}
 
 	/**
@@ -51,6 +66,10 @@ public final class ExecutedVertex {
 	 */
 	public VerifiedVertex getVertex() {
 		return vertex;
+	}
+
+	public Stream<Command> getSuccessfulCommands() {
+		return commandStatus == CommandStatus.SUCCESS ? Stream.of(vertex.getCommand()) : Stream.empty();
 	}
 
 	/**
