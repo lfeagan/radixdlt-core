@@ -19,6 +19,7 @@ package com.radixdlt.consensus;
 
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.consensus.bft.View;
+import com.radixdlt.crypto.ECDSASignature;
 import com.radixdlt.crypto.Hash;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Before;
@@ -41,7 +42,7 @@ public class VoteTest {
 		this.timestampedVoteData = new TimestampedVoteData(this.voteData, 123456L);
 		this.author = mock(BFTNode.class);
 		SyncInfo syncInfo = mock(SyncInfo.class);
-		this.testObject = new Vote(author, syncInfo, timestampedVoteData, null);
+		this.testObject = Vote.from(author, syncInfo, timestampedVoteData, new ECDSASignature());
 	}
 
 	@Test

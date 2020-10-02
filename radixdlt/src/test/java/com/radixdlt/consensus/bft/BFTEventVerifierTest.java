@@ -32,7 +32,6 @@ import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.crypto.ECDSASignature;
-import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -154,7 +153,7 @@ public class BFTEventVerifierTest {
 		Vote vote = mock(Vote.class);
 		BFTNode author = mock(BFTNode.class);
 		when(vote.getAuthor()).thenReturn(author);
-		when(vote.getSignature()).thenReturn(Optional.of(mock(ECDSASignature.class)));
+		when(vote.getSignature()).thenReturn(mock(ECDSASignature.class));
 		when(validatorSet.containsNode(eq(author))).thenReturn(true);
 		when(verifier.verify(any(), any(), any())).thenReturn(true);
 		eventVerifier.processVote(vote);
@@ -166,7 +165,7 @@ public class BFTEventVerifierTest {
 		Vote vote = mock(Vote.class);
 		BFTNode author = mock(BFTNode.class);
 		when(vote.getAuthor()).thenReturn(author);
-		when(vote.getSignature()).thenReturn(Optional.of(mock(ECDSASignature.class)));
+		when(vote.getSignature()).thenReturn(mock(ECDSASignature.class));
 		when(validatorSet.containsNode(eq(author))).thenReturn(false);
 		when(verifier.verify(any(), any(), any())).thenReturn(true);
 		eventVerifier.processVote(vote);
@@ -178,7 +177,7 @@ public class BFTEventVerifierTest {
 		Vote vote = mock(Vote.class);
 		BFTNode author = mock(BFTNode.class);
 		when(vote.getAuthor()).thenReturn(author);
-		when(vote.getSignature()).thenReturn(Optional.of(mock(ECDSASignature.class)));
+		when(vote.getSignature()).thenReturn(mock(ECDSASignature.class));
 		when(validatorSet.containsNode(eq(author))).thenReturn(true);
 		when(verifier.verify(any(), any(), any())).thenReturn(false);
 		eventVerifier.processVote(vote);

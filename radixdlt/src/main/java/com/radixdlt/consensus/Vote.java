@@ -32,7 +32,6 @@ import com.radixdlt.serialization.SerializerDummy;
 import com.radixdlt.serialization.SerializerId2;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Represents a vote on a vertex
@@ -56,7 +55,11 @@ public final class Vote implements RequiresSyncConsensusEvent {
 
 	@JsonProperty("signature")
 	@DsonOutput(Output.ALL)
-	private final ECDSASignature signature; // may be null if not signed (e.g. for genesis)
+	private final ECDSASignature signature;
+
+	public static Vote from(BFTNode author, SyncInfo syncInfo, TimestampedVoteData voteData, ECDSASignature signature) {
+		return new Vote(author, syncInfo, voteData, signature);
+	}
 
 	@JsonCreator
 	private Vote(
@@ -68,11 +71,11 @@ public final class Vote implements RequiresSyncConsensusEvent {
 		this(BFTNode.create(ECPublicKey.fromBytes(author)), syncInfo, voteData, signature);
 	}
 
-	public Vote(BFTNode author, SyncInfo syncInfo, TimestampedVoteData voteData, ECDSASignature signature) {
+	private Vote(BFTNode author, SyncInfo syncInfo, TimestampedVoteData voteData, ECDSASignature signature) {
 		this.author = Objects.requireNonNull(author);
 		this.syncInfo = Objects.requireNonNull(syncInfo);
 		this.voteData = Objects.requireNonNull(voteData);
-		this.signature = signature;
+		this.signature = Objects.requireNonNull(signature);
 	}
 
 	@Override
@@ -108,8 +111,8 @@ public final class Vote implements RequiresSyncConsensusEvent {
 		return voteData;
 	}
 
-	public Optional<ECDSASignature> getSignature() {
-		return Optional.ofNullable(this.signature);
+	public ECDSASignature getSignature() {
+		return this.signature;
 	}
 
 	@JsonProperty("author")

@@ -69,30 +69,21 @@ public final class BFTEventVerifier implements BFTEventProcessor {
 
 	@Override
 	public void processVote(Vote vote) {
-		validAuthor(vote).ifPresent(node ->
-			vote.getSignature().ifPresentOrElse(signature -> {
-				final TimestampedVoteData voteData = vote.getTimestampedVoteData();
-				final Hash voteHash = this.hasher.hash(voteData);
-				if (!this.verifier.verify(node.getKey(), voteHash, signature)) {
-					if (log.isInfoEnabled()) {
-						// Some help for mocks that don't provide this
-						BFTHeader proposed = (voteData == null) ? null : voteData.getProposed();
-						View view = (proposed == null) ? null : proposed.getView();
-						log.info("Vote from author {} in view {} has invalid signature", node, view);
-					}
-				} else {
-					forwardTo.processVote(vote);
-				}
-			}, () -> {
+		validAuthor(vote).ifPresent(node -> {
+			ECDSASignature signature = vote.getSignature();
+			final TimestampedVoteData voteData = vote.getTimestampedVoteData();
+			final Hash voteHash = this.hasher.hash(voteData);
+			if (!this.verifier.verify(node.getKey(), voteHash, signature)) {
 				if (log.isInfoEnabled()) {
 					// Some help for mocks that don't provide this
-					TimestampedVoteData voteData = vote.getTimestampedVoteData();
 					BFTHeader proposed = (voteData == null) ? null : voteData.getProposed();
 					View view = (proposed == null) ? null : proposed.getView();
-					log.info("Vote from author {} in view {} is missing signature", node, view);
+					log.info("Vote from author {} in view {} has invalid signature", node, view);
 				}
-			})
-		);
+			} else {
+				forwardTo.processVote(vote);
+			}
+		});
 	}
 
 	@Override

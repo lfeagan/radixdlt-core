@@ -26,6 +26,7 @@ import com.radixdlt.consensus.bft.VerifiedVertex;
 import com.radixdlt.consensus.safety.SafetyState.Builder;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.bft.View;
+import com.radixdlt.crypto.ECDSASignature;
 import com.radixdlt.crypto.Hash;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +50,7 @@ public class SafetyRulesTest {
 		Hasher hasher = mock(Hasher.class);
 		when(hasher.hash(any())).thenReturn(mock(Hash.class));
 		HashSigner hashSigner = mock(HashSigner.class);
+		when(hashSigner.sign(any(Hash.class))).thenReturn(new ECDSASignature());
 		this.safetyRules = new SafetyRules(mock(BFTNode.class), safetyState, hasher, hashSigner);
 	}
 

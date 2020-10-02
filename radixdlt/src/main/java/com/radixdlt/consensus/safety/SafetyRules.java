@@ -128,6 +128,6 @@ public final class SafetyRules {
 		this.state = safetyStateBuilder.build();
 
 		ECDSASignature signature = this.signer.sign(voteHash);
-		return new Vote(this.self, syncInfo, timestampedVoteData, signature);
+		return Vote.from(this.self, syncInfo, timestampedVoteData, signature);
 	}
 }

@@ -49,6 +49,6 @@ public class VoteSerializeTest extends SerializeObject<Vote> {
 		BFTNode author = BFTNode.create(ECKeyPair.generateNew().getPublicKey());
 		QuorumCertificate qc = new QuorumCertificate(voteData, new TimestampedECDSASignatures());
 		SyncInfo syncInfo = new SyncInfo(qc, qc);
-		return new Vote(author, syncInfo, timestampedVoteData, new ECDSASignature());
+		return Vote.from(author, syncInfo, timestampedVoteData, new ECDSASignature());
 	}
 }

@@ -40,7 +40,6 @@ import com.radixdlt.consensus.sync.BFTSync;
 import com.radixdlt.crypto.ECDSASignature;
 import com.radixdlt.crypto.ECKeyPair;
 import com.radixdlt.crypto.Hash;
-import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -136,7 +135,7 @@ public class BFTEventPreprocessorTest {
 		when(header.getView()).thenReturn(View.of(1));
 		when(voteData.getProposed()).thenReturn(header);
 		when(vote.getVoteData()).thenReturn(voteData);
-		when(vote.getSignature()).thenReturn(Optional.of(mock(ECDSASignature.class)));
+		when(vote.getSignature()).thenReturn(mock(ECDSASignature.class));
 		when(vote.getAuthor()).thenReturn(mock(BFTNode.class));
 		preprocessor.processVote(vote);
 		verify(forwardTo, times(1)).processVote(vote);
