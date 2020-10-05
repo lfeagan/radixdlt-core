@@ -82,6 +82,10 @@ public final class Proposal implements RequiresSyncConsensusEvent {
 		return vertex.getView();
 	}
 
+	public SyncInfo syncInfo() {
+		return new SyncInfo(getQC(), getCommittedQC());
+	}
+
 	@Override
 	public QuorumCertificate getQC() {
 		return vertex.getQC();

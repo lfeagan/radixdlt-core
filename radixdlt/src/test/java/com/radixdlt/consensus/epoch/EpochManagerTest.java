@@ -271,7 +271,7 @@ public class EpochManagerTest {
 
 		verify(eventProcessor, times(1)).start();
 
-		when(vertexStoreSync.syncToQC(any(), any(), any())).thenReturn(SyncResult.SYNCED);
+		when(vertexStoreSync.syncToQC(any(), any())).thenReturn(SyncResult.SYNCED);
 		when(pacemaker.getCurrentView()).thenReturn(View.of(0));
 
 		Proposal proposal = mock(Proposal.class);
@@ -344,7 +344,7 @@ public class EpochManagerTest {
 
 		when(pacemaker.getCurrentView()).thenReturn(View.genesis());
 		when(vertexStore.getHighestQC()).thenReturn(mock(QuorumCertificate.class));
-		when(vertexStoreSync.syncToQC(any(), any(), any())).thenReturn(SyncResult.SYNCED);
+		when(vertexStoreSync.syncToQC(any(), any())).thenReturn(SyncResult.SYNCED);
 
 		Proposal proposal = mock(Proposal.class);
 		UnverifiedVertex vertex = mock(UnverifiedVertex.class);

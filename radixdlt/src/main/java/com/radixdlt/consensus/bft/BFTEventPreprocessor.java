@@ -140,12 +140,11 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 		// TODO: up to dos attacks on calculation of next proposer if ProposerElection is
 		// TODO: an expensive operation. Need to figure out a way of mitigating this problem
 		// TODO: perhaps through filter views too out of bounds
-		if (!Objects.equals(proposerElection.getProposer(view), this.self)) {
+		if (Objects.equals(proposerElection.getProposer(view), this.self)) {
+			forwardTo.processVote(vote);
+		} else {
 			log.warn("VOTE: Ignoring confused vote {} for {}", vote.hashCode(), view);
-			return;
 		}
-
-		forwardTo.processVote(vote);
 	}
 
 	private boolean processViewTimeoutInternal(ViewTimeoutSigned viewTimeout) {
@@ -164,7 +163,7 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 			return true;
 		}
 
-		SyncResult syncResult = this.bftSyncer.syncToQC(viewTimeout.getQC(), viewTimeout.getCommittedQC(), viewTimeout.getAuthor());
+		SyncResult syncResult = this.bftSyncer.syncToQC(viewTimeout.syncInfo(), viewTimeout.getAuthor());
 		switch (syncResult) {
 			case SYNCED:
 				forwardTo.processViewTimeout(viewTimeout);
@@ -201,7 +200,7 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 			return true;
 		}
 
-		SyncResult syncResult = this.bftSyncer.syncToQC(proposal.getQC(), proposal.getCommittedQC(), proposal.getAuthor());
+		SyncResult syncResult = this.bftSyncer.syncToQC(proposal.syncInfo(), proposal.getAuthor());
 		switch (syncResult) {
 			case SYNCED:
 				forwardTo.processProposal(proposal);

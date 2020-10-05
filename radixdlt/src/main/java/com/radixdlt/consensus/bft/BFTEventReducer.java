@@ -24,6 +24,7 @@ import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.PendingVotes;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.UnverifiedVertex;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.Vote;
@@ -127,8 +128,8 @@ public final class BFTEventReducer implements BFTEventProcessor {
 		log.trace("VOTE: Processing {}", vote);
 		// accumulate votes into QCs in store
 		this.pendingVotes.insertVote(vote, this.validatorSet).ifPresent(qc -> {
-			log.trace("VOTE: Formed QC: {}", () -> qc);
-			bftSyncer.syncToQC(qc, vertexStore.getHighestCommittedQC(), vote.getAuthor());
+			log.trace("VOTE: Formed QC: {}", qc);
+			bftSyncer.syncToQC(new SyncInfo(qc, vertexStore.getHighestCommittedQC()), vote.getAuthor());
 		});
 	}
 

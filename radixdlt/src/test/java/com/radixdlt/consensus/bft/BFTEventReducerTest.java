@@ -69,11 +69,13 @@ public class BFTEventReducerTest {
 
 	@Before
 	public void setUp() {
+		QuorumCertificate genesisQC = mock(QuorumCertificate.class);
 		this.nextCommandGenerator = mock(NextCommandGenerator.class);
 		this.sender = mock(BFTEventReducer.BFTEventSender.class);
 		this.safetyRules = mock(SafetyRules.class);
 		this.pacemaker = mock(Pacemaker.class);
 		this.vertexStore = mock(VertexStore.class);
+		when(this.vertexStore.getHighestCommittedQC()).thenReturn(genesisQC);
 		this.vertexStoreSync = mock(BFTSync.class);
 		this.pendingVotes = mock(PendingVotes.class);
 		this.proposerElection = mock(ProposerElection.class);
@@ -124,7 +126,7 @@ public class BFTEventReducerTest {
 		when(header.getVertexId()).thenReturn(id);
 		when(qc.getProposed()).thenReturn(header);
 		when(pendingVotes.insertVote(eq(vote), eq(validatorSet))).thenReturn(Optional.of(qc));
-		when(vertexStoreSync.syncToQC(eq(qc), any(), any())).thenReturn(SyncResult.IN_PROGRESS);
+		when(vertexStoreSync.syncToQC(any(), any())).thenReturn(SyncResult.IN_PROGRESS);
 		reducer.processVote(vote);
 		verify(pacemaker, never()).processQC(any(), any());
 

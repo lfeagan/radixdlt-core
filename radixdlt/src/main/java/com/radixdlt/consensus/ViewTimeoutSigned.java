@@ -82,6 +82,10 @@ public final class ViewTimeoutSigned implements RequiresSyncConsensusEvent {
 		return this.viewTimeout.view();
 	}
 
+	public SyncInfo syncInfo() {
+		return this.syncInfo;
+	}
+
 	@Override
 	public QuorumCertificate getCommittedQC() {
 		return this.syncInfo.highestCommittedQC();

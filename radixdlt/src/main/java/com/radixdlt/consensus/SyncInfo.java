@@ -23,7 +23,6 @@ import javax.annotation.concurrent.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.radixdlt.consensus.bft.View;
 import com.radixdlt.serialization.DsonOutput;
 import com.radixdlt.serialization.SerializerConstants;
 import com.radixdlt.serialization.SerializerDummy;
@@ -57,22 +56,14 @@ public final class SyncInfo {
 	}
 
 	public SyncInfo(QuorumCertificate highestQC, QuorumCertificate highestCommittedQC) {
-		View highView = highestQC.getView();
-		View committedView = highestCommittedQC.getView();
-		int cmp = committedView.compareTo(highView);
-		if (cmp > 0) {
-			throw new IllegalStateException(
-				String.format("Committed view cannot be higher than highest view: %s < %s", highView, committedView));
-		} else if (cmp == 0 && !highestQC.equals(highestCommittedQC)) {
-			throw new IllegalStateException(
-				String.format("Highest and committed QCs are the same view, but not equal (%s != %s)", highestQC, highestCommittedQC));
-		}
-		if (highestCommittedQC.getCommittedAndLedgerStateProof().isEmpty()) {
-			throw new IllegalStateException(String.format("QC for view %s does not contain a commit: %s", committedView, highestCommittedQC));
-		}
-		this.highestQC = highestQC;
+		this.highestQC = Objects.requireNonNull(highestQC);
+		Objects.requireNonNull(highestCommittedQC);
 		// Don't include separate committedQC if it is the same view as highQC
-		this.highestCommittedQC = (cmp == 0) ? null : highestCommittedQC;
+		if (highestQC.equals(highestCommittedQC)) {
+			this.highestCommittedQC = null;
+		} else {
+			this.highestCommittedQC = highestCommittedQC;
+		}
 	}
 
 	public QuorumCertificate highestQC() {

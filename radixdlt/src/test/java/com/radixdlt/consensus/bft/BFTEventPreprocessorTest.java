@@ -90,7 +90,7 @@ public class BFTEventPreprocessorTest {
 		when(viewTimeout.getQC()).thenReturn(qc);
 		QuorumCertificate committedQC = mock(QuorumCertificate.class);
 		when(viewTimeout.getCommittedQC()).thenReturn(committedQC);
-		when(vertexStoreSync.syncToQC(eq(qc), eq(committedQC), any())).thenReturn(synced ? SyncResult.SYNCED : SyncResult.IN_PROGRESS);
+		when(vertexStoreSync.syncToQC(any(), any())).thenReturn(synced ? SyncResult.SYNCED : SyncResult.IN_PROGRESS);
 		return viewTimeout;
 	}
 
@@ -109,8 +109,7 @@ public class BFTEventPreprocessorTest {
 		QuorumCertificate committedQC = mock(QuorumCertificate.class);
 		when(proposal.getCommittedQC()).thenReturn(committedQC);
 		when(proposal.getQC()).thenReturn(qc);
-
-		when(vertexStoreSync.syncToQC(eq(qc), eq(committedQC), any())).thenReturn(synced ? SyncResult.SYNCED : SyncResult.IN_PROGRESS);
+		when(vertexStoreSync.syncToQC(any(), any())).thenReturn(synced ? SyncResult.SYNCED : SyncResult.IN_PROGRESS);
 		return proposal;
 	}
 

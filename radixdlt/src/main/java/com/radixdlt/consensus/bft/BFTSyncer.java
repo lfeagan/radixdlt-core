@@ -17,7 +17,8 @@
 
 package com.radixdlt.consensus.bft;
 
-import com.radixdlt.consensus.QuorumCertificate;
+import com.radixdlt.consensus.SyncInfo;
+
 import javax.annotation.Nullable;
 
 /**
@@ -37,10 +38,9 @@ public interface BFTSyncer {
 	 * An author is used because the author will most likely have the corresponding vertices
 	 * still in memory.
 	 *
-	 * @param qc the qc to sync to
-	 * @param committedQC the committedQC to commit sync to
+	 * @param syncInfo the information on QC's to sync to
 	 * @param author the original author of the qc
-	 * @return true if already synced, false otherwise
+	 * @return a {@link SyncResult} indicating the current sync state
 	 */
-	SyncResult syncToQC(QuorumCertificate qc, QuorumCertificate committedQC, @Nullable BFTNode author);
+	SyncResult syncToQC(SyncInfo syncInfo, @Nullable BFTNode author);
 }
