@@ -18,7 +18,7 @@
 package com.radixdlt.consensus.liveness;
 
 import com.radixdlt.consensus.QuorumCertificate;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.bft.View;
 
 import com.radixdlt.consensus.bft.BFTValidatorSet;
@@ -49,5 +49,5 @@ public interface Pacemaker extends PacemakerState {
 	 * @param validatorSet validator set which forms the quorum
 	 * @return optional with view, if the pacemaker gains a quorum of view timeouts
 	 */
-	Optional<View> processViewTimeout(ViewTimeoutSigned viewTimeout, BFTValidatorSet validatorSet);
+	Optional<View> processViewTimeout(ViewTimeout viewTimeout, BFTValidatorSet validatorSet);
 }

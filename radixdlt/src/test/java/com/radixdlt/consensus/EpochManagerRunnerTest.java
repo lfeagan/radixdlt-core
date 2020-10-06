@@ -48,7 +48,7 @@ public class EpochManagerRunnerTest {
 		PacemakerRx pacemakerRx = mock(PacemakerRx.class);
 		when(pacemakerRx.localTimeouts()).thenReturn(Observable.just(timeout).concatWith(Observable.never()));
 
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		Proposal proposal = mock(Proposal.class);
 		Vote vote = mock(Vote.class);
 

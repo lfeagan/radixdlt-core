@@ -27,7 +27,7 @@ import com.radixdlt.consensus.Hasher;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.TimestampedVoteData;
 import com.radixdlt.consensus.UnverifiedVertex;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.crypto.ECDSASignature;
 import com.radixdlt.crypto.ECPublicKey;
@@ -87,7 +87,7 @@ public final class BFTEventVerifier implements BFTEventProcessor {
 	}
 
 	@Override
-	public void processViewTimeout(ViewTimeoutSigned viewTimeout) {
+	public void processViewTimeout(ViewTimeout viewTimeout) {
 		validAuthor(viewTimeout).ifPresent(node -> {
 			final ECPublicKey key = node.getKey();
 			final Hash timeoutId = this.hasher.hash(viewTimeout.viewTimeout());

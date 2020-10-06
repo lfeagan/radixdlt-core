@@ -21,7 +21,7 @@ import com.radixdlt.consensus.bft.BFTCommittedUpdate;
 import com.radixdlt.consensus.bft.BFTUpdate;
 import com.radixdlt.consensus.bft.VerifiedVertex;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.sync.GetVerticesRequest;
 import com.radixdlt.epochs.EpochsLedgerUpdate;
 import java.util.Set;
@@ -90,7 +90,7 @@ public final class ControlledSender implements DeterministicSender {
 	}
 
 	@Override
-	public void sendViewTimeout(ViewTimeoutSigned viewTimeout, BFTNode nextLeader) {
+	public void sendViewTimeout(ViewTimeout viewTimeout, BFTNode nextLeader) {
 		int receiver = this.network.lookup(nextLeader);
 		handleMessage(messageRank(viewTimeout), new ControlledMessage(this.senderIndex, receiver, viewTimeout));
 	}
@@ -147,7 +147,7 @@ public final class ControlledSender implements DeterministicSender {
 		return MessageRank.of(proof.getEpoch(), proof.getView().number() + 3);
 	}
 
-	private MessageRank messageRank(ViewTimeoutSigned viewTimeout) {
+	private MessageRank messageRank(ViewTimeout viewTimeout) {
 		return MessageRank.of(viewTimeout.getEpoch(), viewTimeout.view().number());
 	}
 

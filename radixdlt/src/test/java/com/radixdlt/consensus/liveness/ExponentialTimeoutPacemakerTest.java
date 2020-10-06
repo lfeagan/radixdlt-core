@@ -21,7 +21,7 @@ import com.google.common.collect.Lists;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.consensus.bft.ValidationState;
@@ -177,8 +177,8 @@ public class ExponentialTimeoutPacemakerTest {
 	@Test
 	public void when_inserting_valid_but_unaccepted_view_timeouts__then_no_view_is_returned() {
 		View view = View.of(2);
-		ViewTimeoutSigned viewTimeout1 = makeViewTimeoutFor(view);
-		ViewTimeoutSigned viewTimeout2 = makeViewTimeoutFor(view);
+		ViewTimeout viewTimeout1 = makeViewTimeoutFor(view);
+		ViewTimeout viewTimeout2 = makeViewTimeoutFor(view);
 		BFTValidatorSet validatorSet = BFTValidatorSet.from(
 			Collections.singleton(BFTValidator.from(viewTimeout1.getAuthor(), UInt256.ONE))
 		);
@@ -188,7 +188,7 @@ public class ExponentialTimeoutPacemakerTest {
 	@Test
 	public void when_inserting_valid_but_old_view_timeouts__then_no_view_is_returned() {
 		View view = View.of(0);
-		ViewTimeoutSigned viewTimeout = makeViewTimeoutFor(view);
+		ViewTimeout viewTimeout = makeViewTimeoutFor(view);
 		BFTValidatorSet validatorSet = mock(BFTValidatorSet.class);
 		pacemaker.processNextView(View.of(0));
 		assertThat(pacemaker.processViewTimeout(viewTimeout, validatorSet)).isEmpty();
@@ -197,7 +197,7 @@ public class ExponentialTimeoutPacemakerTest {
 	@Test
 	public void when_inserting_current_and_accepted_view_timeouts__then_qc_is_formed_and_current_view_has_changed() {
 		View view = View.of(1);
-		ViewTimeoutSigned viewTimeout = makeViewTimeoutFor(view);
+		ViewTimeout viewTimeout = makeViewTimeoutFor(view);
 		BFTValidatorSet validatorSet = mock(BFTValidatorSet.class);
 		ValidationState validationState = mock(ValidationState.class);
 		when(validationState.addSignature(any(), anyLong(), any())).thenReturn(true);
@@ -215,7 +215,7 @@ public class ExponentialTimeoutPacemakerTest {
 		View view = View.of(2);
 		BFTNode node = mock(BFTNode.class);
 
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		when(viewTimeout.view()).thenReturn(view);
 		when(viewTimeout.signature()).thenReturn(new ECDSASignature());
 		when(viewTimeout.getAuthor()).thenReturn(node);
@@ -236,7 +236,7 @@ public class ExponentialTimeoutPacemakerTest {
 	@Test
 	public void when_quorum_formed_for_wrong_view__then_current_view_not_changed_and_no_new_timeout() {
 		View view = View.of(2);
-		ViewTimeoutSigned viewTimeout = makeViewTimeoutFor(view);
+		ViewTimeout viewTimeout = makeViewTimeoutFor(view);
 		QuorumCertificate qc = mock(QuorumCertificate.class);
 		when(qc.getView()).thenReturn(View.genesis());
 		when(viewTimeout.getQC()).thenReturn(qc);
@@ -400,8 +400,8 @@ public class ExponentialTimeoutPacemakerTest {
 		return false;
 	}
 
-	private ViewTimeoutSigned makeViewTimeoutFor(View view) {
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+	private ViewTimeout makeViewTimeoutFor(View view) {
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		QuorumCertificate qc = mock(QuorumCertificate.class);
 		if (!view.isGenesis()) {
 			when(qc.getView()).thenReturn(view.previous());

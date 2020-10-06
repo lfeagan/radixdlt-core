@@ -21,8 +21,8 @@ import com.radixdlt.consensus.LedgerHeader;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.SyncInfo;
 import com.radixdlt.consensus.TimestampedECDSASignatures;
+import com.radixdlt.consensus.ViewTimeoutData;
 import com.radixdlt.consensus.ViewTimeout;
-import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.VoteData;
@@ -46,9 +46,9 @@ public class ConsensusEventMessageSerializeTest extends SerializeMessageObject<C
 		VoteData voteData = new VoteData(header, parent, commit);
 		QuorumCertificate quorumCertificate = new QuorumCertificate(voteData, new TimestampedECDSASignatures());
 		BFTNode author = BFTNode.create(ECKeyPair.generateNew().getPublicKey());
-		ViewTimeout testView = ViewTimeout.from(author, 123L, View.of(1234567890L));
+		ViewTimeoutData testView = ViewTimeoutData.from(author, 123L, View.of(1234567890L));
 		SyncInfo syncInfo = new SyncInfo(quorumCertificate, quorumCertificate);
-		ViewTimeoutSigned testViewSigned = ViewTimeoutSigned.from(testView, syncInfo, new ECDSASignature());
+		ViewTimeout testViewSigned = ViewTimeout.from(testView, syncInfo, new ECDSASignature());
 		return new ConsensusEventMessage(1234, testViewSigned);
 	}
 }

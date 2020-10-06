@@ -33,7 +33,7 @@ import com.radixdlt.consensus.ConsensusEvent;
 import com.radixdlt.consensus.BFTEventsRx;
 import com.radixdlt.consensus.bft.BFTEventReducer.BFTEventSender;
 import com.radixdlt.consensus.Proposal;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.network.addressbook.AddressBook;
 import com.radixdlt.network.addressbook.Peer;
@@ -92,7 +92,7 @@ public final class MessageCentralBFTNetwork implements BFTEventSender, BFTViewTi
 	}
 
 	@Override
-	public void sendViewTimeout(ViewTimeoutSigned viewTimeout, BFTNode nextLeader) {
+	public void sendViewTimeout(ViewTimeout viewTimeout, BFTNode nextLeader) {
 		if (this.self.equals(nextLeader)) {
 			this.localMessages.onNext(viewTimeout);
 		} else {

@@ -20,7 +20,7 @@ package com.radixdlt.middleware2.network;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.radixdlt.consensus.ConsensusEvent;
 import com.radixdlt.consensus.Proposal;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.serialization.DsonOutput;
 import com.radixdlt.serialization.DsonOutput.Output;
@@ -35,7 +35,7 @@ import org.radix.network.messaging.Message;
 public class ConsensusEventMessage extends Message {
 	@JsonProperty("view_timeout")
 	@DsonOutput(Output.ALL)
-	private final ViewTimeoutSigned viewTimeout;
+	private final ViewTimeout viewTimeout;
 
 	@JsonProperty("proposal")
 	@DsonOutput(Output.ALL)
@@ -53,7 +53,7 @@ public class ConsensusEventMessage extends Message {
 		this.vote = null;
 	}
 
-	ConsensusEventMessage(int magic, ViewTimeoutSigned viewTimeout) {
+	ConsensusEventMessage(int magic, ViewTimeout viewTimeout) {
 		super(magic);
 		this.viewTimeout = viewTimeout;
 		this.proposal = null;

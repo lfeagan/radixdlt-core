@@ -22,7 +22,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.radixdlt.consensus.Proposal;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.epoch.EpochView;
@@ -102,8 +102,8 @@ public interface MessageSelector {
 			}
 			Object msg = message.message();
 			View v = null;
-			if (msg instanceof ViewTimeoutSigned) {
-				v = ((ViewTimeoutSigned) msg).view();
+			if (msg instanceof ViewTimeout) {
+				v = ((ViewTimeout) msg).view();
 			} else if (msg instanceof Vote) {
 				v = ((Vote) msg).getVoteData().getProposed().getView().previous();
 			}

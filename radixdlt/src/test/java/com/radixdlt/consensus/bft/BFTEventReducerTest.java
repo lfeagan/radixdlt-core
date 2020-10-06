@@ -25,7 +25,7 @@ import com.radixdlt.consensus.LedgerHeader;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.UnverifiedVertex;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.consensus.VoteData;
@@ -159,7 +159,7 @@ public class BFTEventReducerTest {
 
 	@Test
 	public void when_processing_timeout_as_proposer__then_timeout_is_processed_and_proposal_is_sent() {
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		when(viewTimeout.getQC()).thenReturn(mock(QuorumCertificate.class));
 		when(viewTimeout.view()).thenReturn(View.of(0L));
 		when(pacemaker.getCurrentView()).thenReturn(View.of(0L));

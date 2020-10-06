@@ -20,7 +20,7 @@ package com.radixdlt.middleware2.network;
 import org.junit.Test;
 
 import com.radixdlt.consensus.Proposal;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.Vote;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -31,13 +31,13 @@ public class ConsensusEventMessageTest {
 
 	@Test
 	public void sensibleToStringViewTimeoutSigned() {
-		ViewTimeoutSigned m = mock(ViewTimeoutSigned.class);
+		ViewTimeout m = mock(ViewTimeout.class);
 		ConsensusEventMessage msg1 = new ConsensusEventMessage(0, m);
 		String s1 = msg1.toString();
 		assertThat(s1, containsString(ConsensusEventMessage.class.getSimpleName()));
 		assertThat(s1, containsString(m.toString()));
 
-		assertTrue(msg1.getConsensusMessage() instanceof ViewTimeoutSigned);
+		assertTrue(msg1.getConsensusMessage() instanceof ViewTimeout);
 	}
 
 	@Test

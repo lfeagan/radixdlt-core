@@ -31,7 +31,7 @@ import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.Ledger;
 import com.radixdlt.consensus.Timeout;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.sync.GetVerticesRequest;
 import com.radixdlt.consensus.sync.BFTSyncResponseProcessor;
 import com.radixdlt.consensus.bft.BFTUpdate;
@@ -365,8 +365,8 @@ public final class EpochManager implements BFTSyncRequestProcessor, BFTUpdatePro
 	}
 
 	private void processConsensusEventInternal(ConsensusEvent consensusEvent) {
-		if (consensusEvent instanceof ViewTimeoutSigned) {
-			bftEventProcessor.processViewTimeout((ViewTimeoutSigned) consensusEvent);
+		if (consensusEvent instanceof ViewTimeout) {
+			bftEventProcessor.processViewTimeout((ViewTimeout) consensusEvent);
 		} else if (consensusEvent instanceof Proposal) {
 			bftEventProcessor.processProposal((Proposal) consensusEvent);
 		} else if (consensusEvent instanceof Vote) {

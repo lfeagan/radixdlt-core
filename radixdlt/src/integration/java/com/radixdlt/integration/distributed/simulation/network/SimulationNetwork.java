@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.radixdlt.consensus.ConsensusEvent;
 import com.radixdlt.consensus.BFTEventsRx;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.bft.BFTEventReducer.BFTEventSender;
 import com.radixdlt.consensus.SyncEpochsRPCRx;
 import com.radixdlt.consensus.bft.SignedViewTimeoutToLeaderSender.BFTViewTimeoutSender;
@@ -204,7 +204,7 @@ public class SimulationNetwork {
 		}
 
 		@Override
-		public void sendViewTimeout(ViewTimeoutSigned viewTimeout, BFTNode nextLeader) {
+		public void sendViewTimeout(ViewTimeout viewTimeout, BFTNode nextLeader) {
 			receivedMessages.onNext(MessageInTransit.newMessage(viewTimeout, thisNode, nextLeader));
 		}
 

@@ -39,7 +39,7 @@ import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.Ledger;
 import com.radixdlt.consensus.VerifiedLedgerHeaderAndProof;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.UnverifiedVertex;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.bft.BFTSyncer.SyncResult;
@@ -169,7 +169,7 @@ public class EpochManagerTest {
 		epochManager.processGetVerticesRequest(mock(GetVerticesRequest.class));
 		epochManager.processGetVerticesResponse(mock(GetVerticesResponse.class));
 		epochManager.processLedgerUpdate(mock(EpochsLedgerUpdate.class));
-		epochManager.processConsensusEvent(mock(ViewTimeoutSigned.class));
+		epochManager.processConsensusEvent(mock(ViewTimeout.class));
 		epochManager.processConsensusEvent(mock(Proposal.class));
 		epochManager.processConsensusEvent(mock(Vote.class));
 	}
@@ -285,7 +285,7 @@ public class EpochManagerTest {
 
 		when(proposerElection.getProposer(any())).thenReturn(this.self);
 
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		when(viewTimeout.view()).thenReturn(View.of(1));
 		when(viewTimeout.getAuthor()).thenReturn(this.self);
 		when(viewTimeout.getEpoch()).thenReturn(2L);

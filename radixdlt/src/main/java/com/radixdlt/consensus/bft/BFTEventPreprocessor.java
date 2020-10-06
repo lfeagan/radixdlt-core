@@ -20,7 +20,7 @@ package com.radixdlt.consensus.bft;
 import com.radixdlt.consensus.BFTEventProcessor;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.RequiresSyncConsensusEvent;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.consensus.bft.BFTSyncer.SyncResult;
 import com.radixdlt.consensus.bft.SyncQueues.SyncQueue;
@@ -79,8 +79,8 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 
 		// Explicitly using switch case method here rather than functional method
 		// to process these events due to much better performance
-		if (event instanceof ViewTimeoutSigned) {
-			final ViewTimeoutSigned viewTimeout = (ViewTimeoutSigned) event;
+		if (event instanceof ViewTimeout) {
+			final ViewTimeout viewTimeout = (ViewTimeout) event;
 			return this.processViewTimeoutInternal(viewTimeout);
 		}
 
@@ -100,8 +100,8 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 
 		// Explicitly using switch case method here rather than functional method
 		// to process these events due to much better performance
-		if (event instanceof ViewTimeoutSigned) {
-			final ViewTimeoutSigned viewTimeout = (ViewTimeoutSigned) event;
+		if (event instanceof ViewTimeout) {
+			final ViewTimeout viewTimeout = (ViewTimeout) event;
 			return this.processViewTimeoutInternal(viewTimeout);
 		}
 
@@ -147,7 +147,7 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 		}
 	}
 
-	private boolean processViewTimeoutInternal(ViewTimeoutSigned viewTimeout) {
+	private boolean processViewTimeoutInternal(ViewTimeout viewTimeout) {
 		log.trace("ViewTimeout: PreProcessing {}", viewTimeout);
 
 		// only do something if we're actually the leader for the view
@@ -178,7 +178,7 @@ public final class BFTEventPreprocessor implements BFTEventProcessor {
 	}
 
 	@Override
-	public void processViewTimeout(ViewTimeoutSigned viewTimeout) {
+	public void processViewTimeout(ViewTimeout viewTimeout) {
 		log.trace("ViewTimeout: Queueing {}", viewTimeout);
 		if (queues.isEmptyElseAdd(viewTimeout)) {
 			if (!processViewTimeoutInternal(viewTimeout)) {

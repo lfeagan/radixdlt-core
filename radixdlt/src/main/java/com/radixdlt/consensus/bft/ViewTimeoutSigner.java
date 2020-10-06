@@ -22,8 +22,8 @@ import com.google.inject.name.Named;
 import com.radixdlt.consensus.HashSigner;
 import com.radixdlt.consensus.Hasher;
 import com.radixdlt.consensus.SyncInfo;
+import com.radixdlt.consensus.ViewTimeoutData;
 import com.radixdlt.consensus.ViewTimeout;
-import com.radixdlt.consensus.ViewTimeoutSigned;
 import com.radixdlt.crypto.ECDSASignature;
 import java.util.Objects;
 
@@ -48,9 +48,9 @@ public final class ViewTimeoutSigner {
 	 * @param syncInfo {@link SyncInfo} for highest QC's
 	 * @return a signed view timeout
 	 */
-	public ViewTimeoutSigned signViewTimeout(View nextView, SyncInfo syncInfo) {
-		ViewTimeout timeout = ViewTimeout.from(this.self, syncInfo.highestQC().getProposed().getLedgerHeader().getEpoch(), nextView);
+	public ViewTimeout signViewTimeout(View nextView, SyncInfo syncInfo) {
+		ViewTimeoutData timeout = ViewTimeoutData.from(this.self, syncInfo.highestQC().getProposed().getLedgerHeader().getEpoch(), nextView);
 		ECDSASignature signature = this.signer.sign(this.hasher.hash(timeout));
-		return ViewTimeoutSigned.from(timeout, syncInfo, signature);
+		return ViewTimeout.from(timeout, syncInfo, signature);
 	}
 }

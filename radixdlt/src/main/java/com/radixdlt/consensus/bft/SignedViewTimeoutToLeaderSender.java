@@ -18,7 +18,7 @@
 package com.radixdlt.consensus.bft;
 
 import com.radixdlt.consensus.SyncInfo;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.liveness.ExponentialTimeoutPacemaker.ProceedToViewSender;
 import com.radixdlt.consensus.liveness.ProposerElection;
 import java.util.Objects;
@@ -37,7 +37,7 @@ public final class SignedViewTimeoutToLeaderSender implements ProceedToViewSende
 		 * @param viewTimeout the view timeout message
 		 * @param nextLeader the validator the message gets sent to
 		 */
-		void sendViewTimeout(ViewTimeoutSigned viewTimeout, BFTNode nextLeader);
+		void sendViewTimeout(ViewTimeout viewTimeout, BFTNode nextLeader);
 	}
 
 	private final ViewTimeoutSigner viewTimeoutSigner;
@@ -56,7 +56,7 @@ public final class SignedViewTimeoutToLeaderSender implements ProceedToViewSende
 
 	@Override
 	public void sendProceedToNextView(View nextView, SyncInfo syncInfo) {
-		ViewTimeoutSigned viewTimeout = viewTimeoutSigner.signViewTimeout(nextView, syncInfo);
+		ViewTimeout viewTimeout = viewTimeoutSigner.signViewTimeout(nextView, syncInfo);
 		BFTNode nextLeader = this.proposerElection.getProposer(nextView);
 		log.trace("Sending ViewTimeout to {}: {}", nextLeader, viewTimeout);
 		this.sender.sendViewTimeout(viewTimeout, nextLeader);

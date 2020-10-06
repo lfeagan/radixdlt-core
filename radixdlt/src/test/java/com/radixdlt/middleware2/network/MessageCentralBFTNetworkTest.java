@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 
 import com.radixdlt.consensus.ConsensusEvent;
 import com.radixdlt.consensus.Proposal;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.crypto.ECKeyPair;
 import com.radixdlt.crypto.ECPublicKey;
@@ -58,7 +58,7 @@ public class MessageCentralBFTNetworkTest {
 	public void when_send_timeout_to_self__then_should_receive_timeout_message() {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.bftEvents().subscribe(testObserver);
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		network.sendViewTimeout(viewTimeout, self);
 		testObserver.awaitCount(1);
 		testObserver.assertValue(viewTimeout);
@@ -86,7 +86,7 @@ public class MessageCentralBFTNetworkTest {
 
 	@Test
 	public void when_send_timeout__then_message_central_should_be_sent_timeout_message() {
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		ECPublicKey leaderPk = ECKeyPair.generateNew().getPublicKey();
 		BFTNode leader = mock(BFTNode.class);
 		when(leader.getKey()).thenReturn(leaderPk);
@@ -100,7 +100,7 @@ public class MessageCentralBFTNetworkTest {
 
 	@Test
 	public void when_send_timeout_to_nonexistent__then_no_message_sent() {
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		BFTNode node = mock(BFTNode.class);
 		when(node.getKey()).thenReturn(mock(ECPublicKey.class));
 		network.sendViewTimeout(viewTimeout, node);

@@ -17,7 +17,7 @@
 
 package com.radixdlt.consensus.liveness;
 
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.bft.BFTNode;
 import java.util.Map;
 import java.util.Optional;
@@ -55,7 +55,7 @@ public final class PendingViewTimeouts {
 	 * @param validatorSet The validator set to form a quorum with
 	 * @return The timed-out view, if a quorum was formed
 	 */
-	public Optional<View> insertViewTimeout(ViewTimeoutSigned viewTimeout, BFTValidatorSet validatorSet) {
+	public Optional<View> insertViewTimeout(ViewTimeout viewTimeout, BFTValidatorSet validatorSet) {
 		final BFTNode node = viewTimeout.getAuthor();
 		if (!validatorSet.containsNode(node)) {
 			// Not a valid validator

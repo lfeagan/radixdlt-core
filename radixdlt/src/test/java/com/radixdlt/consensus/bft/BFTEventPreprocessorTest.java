@@ -29,7 +29,7 @@ import com.radixdlt.consensus.BFTEventProcessor;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.UnverifiedVertex;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.BFTHeader;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.consensus.VoteData;
@@ -77,8 +77,8 @@ public class BFTEventPreprocessorTest {
 		);
 	}
 
-	private ViewTimeoutSigned createViewTimeout(boolean goodView, boolean synced) {
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+	private ViewTimeout createViewTimeout(boolean goodView, boolean synced) {
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		when(viewTimeout.signature()).thenReturn(mock(ECDSASignature.class));
 		when(viewTimeout.getAuthor()).thenReturn(self);
 		when(viewTimeout.view()).thenReturn(goodView ? View.of(2) : View.of(0));
@@ -142,7 +142,7 @@ public class BFTEventPreprocessorTest {
 
 	@Test
 	public void when_process_irrelevant_view_timeout__event_gets_thrown_away() {
-		ViewTimeoutSigned viewTimeout = createViewTimeout(false, true);
+		ViewTimeout viewTimeout = createViewTimeout(false, true);
 		when(syncQueues.isEmptyElseAdd(any())).thenReturn(true);
 		preprocessor.processViewTimeout(viewTimeout);
 		verify(syncQueues, never()).add(any());
@@ -160,7 +160,7 @@ public class BFTEventPreprocessorTest {
 
 	@Test
 	public void when_processing_view_timeout_as_not_proposer__then_event_gets_thrown_away() {
-		ViewTimeoutSigned viewTimeout = createViewTimeout(true, true);
+		ViewTimeout viewTimeout = createViewTimeout(true, true);
 		when(syncQueues.isEmptyElseAdd(eq(viewTimeout))).thenReturn(true);
 		when(proposerElection.getProposer(View.of(2))).thenReturn(mock(BFTNode.class));
 		when(viewTimeout.getAuthor()).thenReturn(self);
@@ -170,7 +170,7 @@ public class BFTEventPreprocessorTest {
 
 	@Test
 	public void when_process_view_timeout_not_synced__then_event_is_queued() {
-		ViewTimeoutSigned viewTimeout = createViewTimeout(true, false);
+		ViewTimeout viewTimeout = createViewTimeout(true, false);
 		when(syncQueues.isEmptyElseAdd(eq(viewTimeout))).thenReturn(true);
 		preprocessor.processViewTimeout(viewTimeout);
 		verify(syncQueues, times(1)).add(eq(viewTimeout));
@@ -188,7 +188,7 @@ public class BFTEventPreprocessorTest {
 
 	@Test
 	public void when_process_view_timeout_synced__then_event_is_forwarded() {
-		ViewTimeoutSigned viewTimeout = createViewTimeout(true, true);
+		ViewTimeout viewTimeout = createViewTimeout(true, true);
 		when(syncQueues.isEmptyElseAdd(eq(viewTimeout))).thenReturn(true);
 		preprocessor.processViewTimeout(viewTimeout);
 		verify(syncQueues, never()).add(any());

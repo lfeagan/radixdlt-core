@@ -21,7 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.RateLimiter;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.SyncInfo;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.bft.BFTValidatorSet;
 import org.apache.logging.log4j.Level;
@@ -143,7 +143,7 @@ public final class ExponentialTimeoutPacemaker implements Pacemaker {
 	}
 
 	@Override
-	public Optional<View> processViewTimeout(ViewTimeoutSigned viewTimeout, BFTValidatorSet validatorSet) {
+	public Optional<View> processViewTimeout(ViewTimeout viewTimeout, BFTValidatorSet validatorSet) {
 		View timeoutView = viewTimeout.view();
 		if (timeoutView.compareTo(this.lastSyncView) <= 0) {
 			// Log happens a lot where f > 0, so setting to trace level

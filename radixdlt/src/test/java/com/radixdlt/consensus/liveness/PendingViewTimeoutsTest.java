@@ -19,7 +19,7 @@ package com.radixdlt.consensus.liveness;
 
 import com.radixdlt.consensus.bft.View;
 import com.radixdlt.consensus.TimestampedECDSASignatures;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.consensus.bft.ValidationState;
 import com.radixdlt.consensus.bft.BFTValidator;
@@ -47,8 +47,8 @@ public class PendingViewTimeoutsTest {
 
 	@Test
 	public void when_inserting_viewtimeout_not_from_validator_set__no_qc_is_returned() {
-		ViewTimeoutSigned viewTimeout1 = makeViewTimeoutSignedFor(mock(BFTNode.class), View.genesis());
-		ViewTimeoutSigned viewTimeout2 = makeViewTimeoutSignedFor(mock(BFTNode.class), View.genesis());
+		ViewTimeout viewTimeout1 = makeViewTimeoutSignedFor(mock(BFTNode.class), View.genesis());
+		ViewTimeout viewTimeout2 = makeViewTimeoutSignedFor(mock(BFTNode.class), View.genesis());
 
 		BFTValidatorSet validatorSet = BFTValidatorSet.from(
 			Collections.singleton(BFTValidator.from(viewTimeout1.getAuthor(), UInt256.ONE))
@@ -61,7 +61,7 @@ public class PendingViewTimeoutsTest {
 	@Test
 	public void when_inserting_valid_and_accepted_viewtimeout__qc_is_formed() {
 		BFTNode author = mock(BFTNode.class);
-		ViewTimeoutSigned viewTimeout = makeViewTimeoutSignedFor(author, View.genesis());
+		ViewTimeout viewTimeout = makeViewTimeoutSignedFor(author, View.genesis());
 
 		BFTValidatorSet validatorSet = mock(BFTValidatorSet.class);
 		ValidationState validationState = mock(ValidationState.class);
@@ -78,7 +78,7 @@ public class PendingViewTimeoutsTest {
 	@Test
 	public void when_inserting_again__previous_viewtimeout_is_removed() {
 		BFTNode author = mock(BFTNode.class);
-		ViewTimeoutSigned viewTimeout = makeViewTimeoutSignedFor(author, View.genesis());
+		ViewTimeout viewTimeout = makeViewTimeoutSignedFor(author, View.genesis());
 
 		BFTValidatorSet validatorSet = mock(BFTValidatorSet.class);
 		ValidationState validationState = mock(ValidationState.class);
@@ -93,7 +93,7 @@ public class PendingViewTimeoutsTest {
 		assertEquals(1, this.pendingViewTimeouts.timeoutStateSize());
 		assertEquals(1, this.pendingViewTimeouts.previousTimeoutSize());
 
-		ViewTimeoutSigned viewTimeout2 = makeViewTimeoutSignedFor(author, View.of(1));
+		ViewTimeout viewTimeout2 = makeViewTimeoutSignedFor(author, View.of(1));
 
 		// Should not change size with different timeouts for same author
 		assertThat(this.pendingViewTimeouts.insertViewTimeout(viewTimeout2, validatorSet)).isNotPresent();
@@ -106,8 +106,8 @@ public class PendingViewTimeoutsTest {
 		assertEquals(1, this.pendingViewTimeouts.previousTimeoutSize());
 	}
 
-	private ViewTimeoutSigned makeViewTimeoutSignedFor(BFTNode author, View view) {
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+	private ViewTimeout makeViewTimeoutSignedFor(BFTNode author, View view) {
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		when(viewTimeout.getAuthor()).thenReturn(author);
 		when(viewTimeout.view()).thenReturn(view);
 		when(viewTimeout.signature()).thenReturn(new ECDSASignature());

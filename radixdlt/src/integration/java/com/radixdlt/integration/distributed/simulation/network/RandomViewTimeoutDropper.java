@@ -17,7 +17,7 @@
 
 package com.radixdlt.integration.distributed.simulation.network;
 
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.integration.distributed.simulation.network.SimulationNetwork.MessageInTransit;
 import java.util.Objects;
 import java.util.Random;
@@ -37,7 +37,7 @@ public class RandomViewTimeoutDropper implements Predicate<MessageInTransit> {
 
 	@Override
 	public boolean test(MessageInTransit msg) {
-		if (msg.getContent() instanceof ViewTimeoutSigned) {
+		if (msg.getContent() instanceof ViewTimeout) {
 			return random.nextDouble() < drops;
 		}
 

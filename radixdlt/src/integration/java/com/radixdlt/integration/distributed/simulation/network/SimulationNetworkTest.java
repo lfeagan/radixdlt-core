@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 import com.google.common.collect.ImmutableSet;
 import com.radixdlt.consensus.ConsensusEvent;
 import com.radixdlt.consensus.Proposal;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.consensus.bft.BFTNode;
 import com.radixdlt.consensus.sync.GetVerticesRequest;
@@ -47,7 +47,7 @@ public class SimulationNetworkTest {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node1).bftEvents()
 			.subscribe(testObserver);
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		network.getNetwork(node1).sendViewTimeout(viewTimeout, node1);
 		testObserver.awaitCount(1);
 		testObserver.assertValue(viewTimeout);
@@ -59,7 +59,7 @@ public class SimulationNetworkTest {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node1).bftEvents()
 			.subscribe(testObserver);
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		network.getNetwork(node1).sendViewTimeout(viewTimeout, node1);
 		network.getNetwork(node1).sendViewTimeout(viewTimeout, node1);
 		testObserver.awaitCount(2);
@@ -72,7 +72,7 @@ public class SimulationNetworkTest {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node1).bftEvents()
 			.subscribe(testObserver);
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		network.getNetwork(node1).sendViewTimeout(viewTimeout, node1);
 		network.getNetwork(node2).sendViewTimeout(viewTimeout, node1);
 		testObserver.awaitCount(2);
@@ -112,7 +112,7 @@ public class SimulationNetworkTest {
 		TestObserver<ConsensusEvent> testObserver = TestObserver.create();
 		network.getNetwork(node2).bftEvents()
 			.subscribe(testObserver);
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		network.getNetwork(node1).sendViewTimeout(viewTimeout, node1);
 		testObserver.awaitCount(1);
 		testObserver.assertEmpty();

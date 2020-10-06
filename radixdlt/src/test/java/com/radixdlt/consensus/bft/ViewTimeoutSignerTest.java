@@ -28,7 +28,7 @@ import com.radixdlt.consensus.Hasher;
 import com.radixdlt.consensus.LedgerHeader;
 import com.radixdlt.consensus.QuorumCertificate;
 import com.radixdlt.consensus.SyncInfo;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.crypto.ECDSASignature;
 import com.radixdlt.crypto.Hash;
 
@@ -63,7 +63,7 @@ public class ViewTimeoutSignerTest {
 		when(syncInfo.highestQC()).thenReturn(highestQC);
 		//syncInfo.highestQC().getProposed().getLedgerHeader().getEpoch()
 
-		ViewTimeoutSigned viewTimeout = viewTimeoutSigner.signViewTimeout(view, syncInfo);
+		ViewTimeout viewTimeout = viewTimeoutSigner.signViewTimeout(view, syncInfo);
 
 		assertThat(viewTimeout.getAuthor()).isEqualTo(self);
 	}

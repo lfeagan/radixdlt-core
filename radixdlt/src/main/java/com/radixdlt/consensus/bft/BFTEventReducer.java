@@ -20,7 +20,7 @@ package com.radixdlt.consensus.bft;
 import com.radixdlt.consensus.BFTEventProcessor;
 import com.radixdlt.consensus.Command;
 import com.radixdlt.consensus.Hasher;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.PendingVotes;
 import com.radixdlt.consensus.Proposal;
 import com.radixdlt.consensus.QuorumCertificate;
@@ -134,7 +134,7 @@ public final class BFTEventReducer implements BFTEventProcessor {
 	}
 
 	@Override
-	public void processViewTimeout(ViewTimeoutSigned viewTimeout) {
+	public void processViewTimeout(ViewTimeout viewTimeout) {
 		log.trace("ViewTimeout: Processing {}", viewTimeout);
 		this.pacemaker.processViewTimeout(viewTimeout, validatorSet).ifPresent(view -> {
 			// Hotstuff's Event-Driven OnBeat

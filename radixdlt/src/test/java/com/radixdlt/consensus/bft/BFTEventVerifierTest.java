@@ -29,7 +29,7 @@ import com.radixdlt.consensus.BFTEventProcessor;
 import com.radixdlt.consensus.HashVerifier;
 import com.radixdlt.consensus.Hasher;
 import com.radixdlt.consensus.Proposal;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.Vote;
 import com.radixdlt.crypto.ECDSASignature;
 import org.junit.Before;
@@ -110,7 +110,7 @@ public class BFTEventVerifierTest {
 
 	@Test
 	public void when_process_correct_view_timeout_then_should_be_forwarded() {
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		BFTNode author = mock(BFTNode.class);
 		when(viewTimeout.getAuthor()).thenReturn(author);
 		when(viewTimeout.view()).thenReturn(View.of(1));
@@ -123,7 +123,7 @@ public class BFTEventVerifierTest {
 
 	@Test
 	public void when_process_bad_author_view_timeout_then_should_not_be_forwarded() {
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		BFTNode author = mock(BFTNode.class);
 		when(viewTimeout.getAuthor()).thenReturn(author);
 		when(viewTimeout.view()).thenReturn(View.of(1));
@@ -136,7 +136,7 @@ public class BFTEventVerifierTest {
 
 	@Test
 	public void when_process_bad_signature_view_timeout_then_should_not_be_forwarded() {
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		BFTNode author = mock(BFTNode.class);
 		when(viewTimeout.getAuthor()).thenReturn(author);
 		when(viewTimeout.view()).thenReturn(View.of(1));

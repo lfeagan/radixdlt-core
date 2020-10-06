@@ -30,19 +30,19 @@ public class ViewTimeoutTest {
 	private BFTNode author;
 	private long epoch;
 	private View view;
-	private ViewTimeout testObject;
+	private ViewTimeoutData testObject;
 
 	@Before
 	public void setUp() {
 		this.view = View.of(1L);
 		this.epoch = 1;
 		this.author = mock(BFTNode.class);
-		this.testObject = ViewTimeout.from(author, epoch, view);
+		this.testObject = ViewTimeoutData.from(author, epoch, view);
 	}
 
 	@Test
 	public void equalsContract() {
-		EqualsVerifier.forClass(ViewTimeout.class)
+		EqualsVerifier.forClass(ViewTimeoutData.class)
 			.verify();
 	}
 

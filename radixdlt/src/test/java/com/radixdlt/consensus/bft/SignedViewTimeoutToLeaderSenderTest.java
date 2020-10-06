@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.radixdlt.consensus.SyncInfo;
-import com.radixdlt.consensus.ViewTimeoutSigned;
+import com.radixdlt.consensus.ViewTimeout;
 import com.radixdlt.consensus.bft.SignedViewTimeoutToLeaderSender.BFTViewTimeoutSender;
 import com.radixdlt.consensus.liveness.ProposerElection;
 import org.junit.Before;
@@ -49,7 +49,7 @@ public class SignedViewTimeoutToLeaderSenderTest {
 	@Test
 	public void testSend() {
 		View view = mock(View.class);
-		ViewTimeoutSigned viewTimeout = mock(ViewTimeoutSigned.class);
+		ViewTimeout viewTimeout = mock(ViewTimeout.class);
 		when(viewTimeoutSigner.signViewTimeout(eq(view), any())).thenReturn(viewTimeout);
 		BFTNode node = mock(BFTNode.class);
 		when(proposerElection.getProposer(eq(view))).thenReturn(node);
